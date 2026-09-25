@@ -11,16 +11,19 @@
 :root{
   --bg:#f6f4ef; --ink:#20302c; --sub:#5b6b66; --line:#dcd6c8;
   --accent:#a8672f; --accent-soft:#f1e2ce; --card:#ffffff; --done:#5c7a63; --done-bg:#e7efe6;
+  --warn:#b5762b; --warn-bg:#f6e6ce;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --bg:#161c1a; --ink:#eee9df; --sub:#a3ab a4; --sub:#9aa39c; --line:#33403a;
+    --bg:#161c1a; --ink:#eee9df; --sub:#9aa39c; --line:#33403a;
     --accent:#e0a367; --accent-soft:#2c2419; --card:#1f2723; --done:#8fb59a; --done-bg:#1d2b21;
+    --warn:#e0a367; --warn-bg:#2c2419;
   }
 }
 :root[data-theme="dark"]{
   --bg:#161c1a; --ink:#eee9df; --sub:#9aa39c; --line:#33403a;
   --accent:#e0a367; --accent-soft:#2c2419; --card:#1f2723; --done:#8fb59a; --done-bg:#1d2b21;
+  --warn:#e0a367; --warn-bg:#2c2419;
 }
 *{box-sizing:border-box;}
 html{scroll-padding-top:env(safe-area-inset-top,0px);}
@@ -30,14 +33,14 @@ body{
   padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
   min-height:100%;
 }
-.wrap{max-width:760px; margin:0 auto; padding:32px 20px 80px;}
+.wrap{max-width:820px; margin:0 auto; padding:32px 20px 80px;}
 header{margin-bottom:28px;}
 h1{font-size:1.5rem; font-weight:900; margin:0 0 4px; letter-spacing:.02em;}
 .lead{color:var(--sub); font-size:.88rem; margin:0;}
 
 .progress-card{
   background:var(--card); border:1px solid var(--line); border-radius:14px;
-  padding:20px; margin:20px 0 26px; display:flex; align-items:center; gap:18px;
+  padding:20px; margin:20px 0 14px; display:flex; align-items:center; gap:18px;
 }
 .ring{flex-shrink:0;}
 .progress-text{flex:1;}
@@ -71,13 +74,10 @@ h1{font-size:1.5rem; font-weight:900; margin:0 0 4px; letter-spacing:.02em;}
 .cat.open .chev{transform:rotate(90deg);}
 .cat-note{padding:0 16px 12px; margin-top:-6px; color:var(--sub); font-size:.78rem;}
 .items{max-height:0; overflow:hidden; transition:max-height .25s ease;}
-.cat.open .items{max-height:1200px;}
-.item{
-  display:flex; align-items:flex-start; gap:10px; padding:10px 16px;
-  border-top:1px solid var(--line);
-}
-.item label{display:flex; align-items:flex-start; gap:10px; cursor:pointer; width:100%;}
-.item input{margin-top:3px; width:17px; height:17px; accent-color:var(--accent); flex-shrink:0;}
+.cat.open .items{max-height:4000px;}
+.item{padding:12px 16px; border-top:1px solid var(--line);}
+.item-top{display:flex; align-items:flex-start; gap:10px; cursor:pointer;}
+.item-top input{margin-top:3px; width:17px; height:17px; accent-color:var(--accent); flex-shrink:0;}
 .item-text{font-size:.9rem; line-height:1.45;}
 .item.done .item-text{color:var(--sub); text-decoration:line-through;}
 .badge{
@@ -85,6 +85,18 @@ h1{font-size:1.5rem; font-weight:900; margin:0 0 4px; letter-spacing:.02em;}
   background:var(--accent-soft); color:var(--accent); margin-left:6px; white-space:nowrap;
 }
 .item.done .badge{background:var(--done-bg); color:var(--done);}
+
+.fields{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; padding-left:27px;}
+.fields input, .fields select{
+  font-family:inherit; font-size:.78rem; padding:5px 8px; border-radius:7px;
+  border:1px solid var(--line); background:var(--bg); color:var(--ink); min-width:0;
+}
+.f-assignee{width:98px;}
+.f-due{width:132px;}
+.f-vendor{width:130px;}
+.f-approval{width:110px; cursor:pointer;}
+.f-approval.ap-pending{background:var(--warn-bg); color:var(--warn); border-color:var(--warn);}
+.f-approval.ap-approved{background:var(--done-bg); color:var(--done); border-color:var(--done);}
 
 footer{text-align:center; color:var(--sub); font-size:.76rem; margin-top:30px;}
 button.reset{
@@ -98,7 +110,7 @@ button.reset:hover{border-color:var(--accent); color:var(--accent);}
 <div class="wrap">
   <header>
     <h1>新規開業準備 進捗管理</h1>
-    <p class="lead">項目をタップしてチェック。進捗はこの端末に自動保存されます。</p>
+    <p class="lead">担当者・期限・発注先・承認状況をあわせて管理できます。変更はスプレッドシートと共有されます。</p>
   </header>
 
   <div class="progress-card">
@@ -111,6 +123,7 @@ button.reset:hover{border-color:var(--accent); color:var(--accent);}
     <div class="progress-text">
       <div class="progress-num" id="pctNum">0%</div>
       <div class="progress-sub" id="pctSub">0 / 0 完了</div>
+      <div class="progress-sub" id="apprSub">承認済み 0 / 0</div>
       <div class="bar-track"><div class="bar-fill" id="barFill" style="width:0%"></div></div>
     </div>
   </div>
@@ -129,9 +142,7 @@ button.reset:hover{border-color:var(--accent); color:var(--accent);}
 
 <script>
 const DATA = [
-  {
-    id: "somu", title: "総務的備品", note: "11〜12月に準備",
-    items: [
+  { id: "somu", title: "総務的備品", note: "11〜12月に準備", items: [
       { t: "通信設備系（PBX関連・複合機）" },
       { t: "職員用冷蔵庫" },
       { t: "掃除機" },
@@ -142,22 +153,15 @@ const DATA = [
       { t: "ウォーターサーバー" },
       { t: "アルコールチェッカー", d: "1か月前" },
       { t: "各種アカウントの設定", d: "1か月前" },
-    ]
-  },
-  {
-    id: "jimu", title: "事務的備品", note: "サポートチームに依頼",
-    items: [ { t: "事務的備品一式の手配依頼" } ]
-  },
-  {
-    id: "keiri", title: "経理対応", note: "",
-    items: [
+  ]},
+  { id: "jimu", title: "事務的備品", note: "サポートチームに依頼", items: [
+      { t: "事務的備品一式の手配依頼" },
+  ]},
+  { id: "keiri", title: "経理対応", note: "", items: [
       { t: "入出金管理の体制構築" },
       { t: "手持ち現金の管理体制構築" },
-    ]
-  },
-  {
-    id: "iryoki", title: "医療機器等の購入", note: "保健所の検査に間に合うように",
-    items: [
+  ]},
+  { id: "iryoki", title: "医療機器等の購入", note: "保健所の検査に間に合うように", items: [
       { t: "電子カルテ", d: "1か月前" },
       { t: "ポータブルエコー（V-SCAN候補）", d: "1台" },
       { t: "ポータブル心電図", d: "1台" },
@@ -165,47 +169,42 @@ const DATA = [
       { t: "滅菌機", d: "1台" },
       { t: "麻薬金庫", d: "1台" },
       { t: "医療用廃棄物の処理手配" },
-    ]
-  },
-  {
-    id: "zairyo", title: "医療材料等", note: "卸から購入するには届出の控えが必要",
-    items: [ { t: "卸への発注手配", d: "直前に対応" } ]
-  },
-  {
-    id: "bag", title: "診療バッグ等", note: "サポートチームと連携対応",
-    items: [ { t: "診療バッグ等の準備" } ]
-  },
-  {
-    id: "gaichu", title: "外注契約", note: "",
-    items: [
+  ]},
+  { id: "zairyo", title: "医療材料等", note: "卸から購入するには届出の控えが必要", items: [
+      { t: "卸への発注手配", d: "直前に対応" },
+  ]},
+  { id: "bag", title: "診療バッグ等", note: "サポートチームと連携対応", items: [
+      { t: "診療バッグ等の準備" },
+  ]},
+  { id: "gaichu", title: "外注契約", note: "", items: [
       { t: "検体検査の外注契約" },
       { t: "医療ごみ処理の外注契約" },
       { t: "産業ごみ（一般ごみ）処理の外注契約" },
-    ]
-  },
+  ]},
 ];
 
-// ここにGoogle Apps ScriptのウェブアプリURLを貼り付けてください
-// 例: https://script.google.com/macros/s/XXXXXXXXXXXXXXXXXXXXXXXX/exec
 const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbx-jPnyjqfcHuIPj8u-LsMG1urnmQmbN4WpPjtuny61--EpIgHJv_4BPKYrwsYEOWUUjw/exec";
 const POLL_MS = 6000;
+const EMPTY_ITEM = { checked:false, assignee:"", due:"", vendor:"", approval:"" };
 
-const STORAGE_KEY = "clinic-prep-progress-v1";
-let state = {};
-let mode = "local"; // "local" | "shared"
+const STORAGE_KEY = "clinic-prep-progress-v2";
+let state = {};      // key -> {checked, assignee, due, vendor, approval}
+let mode = "local";
 let pollTimer = null;
 let pending = false;
+const openState = {};
 
 try {
   const raw = localStorage.getItem(STORAGE_KEY);
   state = raw ? JSON.parse(raw) : {};
 } catch(e) { state = {}; }
 
-function setSyncBanner(kind, text) {
-  const el = document.getElementById("syncStatus");
-  el.innerHTML = `<span class="dot ${kind === "shared" ? "live" : "local"}"></span><span>${text}</span>`;
-}
+function itemOf(key){ return state[key] || {...EMPTY_ITEM}; }
 
+function setSyncBanner(kind, text) {
+  document.getElementById("syncStatus").innerHTML =
+    `<span class="dot ${kind === "shared" ? "live" : "local"}"></span><span>${text}</span>`;
+}
 function saveLocal() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
 }
@@ -214,41 +213,39 @@ async function fetchState() {
   const res = await fetch(WEBAPP_URL + "?action=get");
   if (!res.ok) throw new Error("fetch failed");
   const data = await res.json();
-  return data.checks || {};
+  return data.items || {};
 }
-
-async function pushCheck(key, value) {
-  const url = WEBAPP_URL + "?action=set&key=" + encodeURIComponent(key) + "&value=" + value;
+async function pushField(key, field, value) {
+  const url = WEBAPP_URL + "?action=update&key=" + encodeURIComponent(key) +
+    "&field=" + field + "&value=" + encodeURIComponent(value);
   const res = await fetch(url);
   if (!res.ok) throw new Error("update failed");
   const data = await res.json();
-  return data.checks || {};
+  return data.items || {};
 }
-
 async function poll() {
   if (pending) return;
   try {
-    const checks = await fetchState();
-    state = checks;
+    state = await fetchState();
     setSyncBanner("shared", "スプレッドシートと共有中（数秒ごとに自動更新）");
     render();
   } catch (e) {
     setSyncBanner("local", "共有先に接続できません（この端末にのみ保存されます）");
   }
 }
-
-function save(key, value) {
+function updateField(key, field, value) {
+  state[key] = { ...itemOf(key), [field]: value };
   if (mode === "shared") {
     pending = true;
-    pushCheck(key, value)
-      .then(checks => { state = checks; })
+    pushField(key, field, value)
+      .then(items => { state = items; })
       .catch(() => { setSyncBanner("local", "更新の送信に失敗しました。接続を確認してください"); })
       .finally(() => { pending = false; render(); });
   } else {
     saveLocal();
+    render();
   }
 }
-
 async function initSync() {
   if (!WEBAPP_URL || WEBAPP_URL.indexOf("PASTE_YOUR") === 0) {
     setSyncBanner("local", "この端末にのみ保存されます（WEBAPP_URL未設定）");
@@ -265,15 +262,13 @@ async function initSync() {
   }
 }
 
-const openState = {};
-
 function render() {
   const root = document.getElementById("categories");
   root.innerHTML = "";
-  let total = 0, doneCount = 0;
+  let total = 0, doneCount = 0, apprTotal = 0, apprDone = 0;
 
   DATA.forEach(cat => {
-    const catDone = cat.items.filter(it => state[cat.id + ":" + it.t]).length;
+    const catDone = cat.items.filter(it => itemOf(cat.id + ":" + it.t).checked).length;
     total += cat.items.length; doneCount += catDone;
 
     const el = document.createElement("div");
@@ -285,10 +280,7 @@ function render() {
       <span class="cat-title">${cat.title}</span>
       <span class="cat-meta"><span class="cat-count">${catDone}/${cat.items.length}</span><span class="chev">›</span></span>
     `;
-    head.addEventListener("click", () => {
-      openState[cat.id] = !openState[cat.id];
-      render();
-    });
+    head.addEventListener("click", () => { openState[cat.id] = !openState[cat.id]; render(); });
     el.appendChild(head);
 
     if (cat.note) {
@@ -302,20 +294,40 @@ function render() {
     itemsWrap.className = "items";
     cat.items.forEach(it => {
       const key = cat.id + ":" + it.t;
-      const checked = !!state[key];
+      const rec = itemOf(key);
+      apprTotal++;
+      if (rec.approval === "承認済み") apprDone++;
+
       const row = document.createElement("div");
-      row.className = "item" + (checked ? " done" : "");
-      row.innerHTML = `
-        <label>
-          <input type="checkbox" ${checked ? "checked" : ""}>
-          <span class="item-text">${it.t}${it.d ? `<span class="badge">${it.d}</span>` : ""}</span>
-        </label>
+      row.className = "item" + (rec.checked ? " done" : "");
+
+      const top = document.createElement("label");
+      top.className = "item-top";
+      top.innerHTML = `
+        <input type="checkbox" ${rec.checked ? "checked" : ""}>
+        <span class="item-text">${it.t}${it.d ? `<span class="badge">${it.d}</span>` : ""}</span>
       `;
-      row.querySelector("input").addEventListener("change", (e) => {
-        state[key] = e.target.checked;
-        save(key, e.target.checked);
-        render();
-      });
+      top.querySelector("input").addEventListener("change", (e) => updateField(key, "checked", e.target.checked));
+      row.appendChild(top);
+
+      const fields = document.createElement("div");
+      fields.className = "fields";
+      fields.innerHTML = `
+        <input class="f-assignee" placeholder="担当者" value="${rec.assignee || ""}">
+        <input class="f-due" type="date" value="${rec.due || ""}">
+        <input class="f-vendor" placeholder="発注先" value="${rec.vendor || ""}">
+        <select class="f-approval ${rec.approval === "申請中" ? "ap-pending" : rec.approval === "承認済み" ? "ap-approved" : ""}">
+          <option value="" ${rec.approval === "" ? "selected" : ""}>承認: 未定</option>
+          <option value="申請中" ${rec.approval === "申請中" ? "selected" : ""}>承認: 申請中</option>
+          <option value="承認済み" ${rec.approval === "承認済み" ? "selected" : ""}>承認: 承認済み</option>
+        </select>
+      `;
+      fields.querySelector(".f-assignee").addEventListener("change", (e) => updateField(key, "assignee", e.target.value));
+      fields.querySelector(".f-due").addEventListener("change", (e) => updateField(key, "due", e.target.value));
+      fields.querySelector(".f-vendor").addEventListener("change", (e) => updateField(key, "vendor", e.target.value));
+      fields.querySelector(".f-approval").addEventListener("change", (e) => updateField(key, "approval", e.target.value));
+      row.appendChild(fields);
+
       itemsWrap.appendChild(row);
     });
     el.appendChild(itemsWrap);
@@ -325,17 +337,18 @@ function render() {
   const pct = total ? Math.round((doneCount / total) * 100) : 0;
   document.getElementById("pctNum").textContent = pct + "%";
   document.getElementById("pctSub").textContent = `${doneCount} / ${total} 完了`;
+  document.getElementById("apprSub").textContent = `承認済み ${apprDone} / ${apprTotal}`;
   document.getElementById("barFill").style.width = pct + "%";
   const circumference = 188.5;
   document.getElementById("ringFill").style.strokeDashoffset = circumference - (circumference * pct / 100);
 }
 
 document.getElementById("resetBtn").addEventListener("click", async () => {
-  if (!confirm("すべてのチェックをリセットしますか？")) return;
+  if (!confirm("すべてのチェックをリセットしますか？（担当者・期限・発注先・承認状況は残ります）")) return;
   const keys = Object.keys(state);
-  state = {};
+  for (const k of keys) { state[k] = { ...itemOf(k), checked: false }; }
   if (mode === "shared") {
-    for (const k of keys) { try { await pushCheck(k, false); } catch(e) {} }
+    for (const k of keys) { try { await pushField(k, "checked", "false"); } catch(e) {} }
   } else {
     saveLocal();
   }
