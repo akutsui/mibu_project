@@ -75,12 +75,18 @@ h1{font-size:1.5rem; font-weight:900; margin:0 0 4px; letter-spacing:.02em;}
 .items{max-height:0; overflow:hidden; transition:max-height .25s ease;}
 .cat.open .items{max-height:4000px;}
 .item{padding:12px 16px; border-top:1px solid var(--line);}
-.item-top{display:flex; align-items:flex-start; gap:10px; cursor:pointer;}
-.item-top input{margin-top:3px; width:17px; height:17px; accent-color:var(--accent); flex-shrink:0;}
+.item-top{display:flex; align-items:center; justify-content:space-between; gap:10px;}
 .item-text{font-size:.9rem; line-height:1.45;}
-.item.done .item-text{color:var(--sub); text-decoration:line-through;}
+.item.complete .item-text{color:var(--sub); text-decoration:line-through;}
 
-.fields{display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; padding-left:27px;}
+.f-status{
+  font-family:inherit; font-size:.76rem; font-weight:500; padding:4px 9px; border-radius:99px;
+  border:1px solid var(--line); background:var(--bg); color:var(--sub); cursor:pointer; flex-shrink:0;
+}
+.f-status.st-ordered{background:var(--warn-bg); color:var(--warn); border-color:var(--warn);}
+.f-status.st-done{background:var(--done-bg); color:var(--done); border-color:var(--done);}
+
+.fields{display:flex; flex-wrap:wrap; gap:8px; margin-top:8px;}
 .field{display:flex; flex-direction:column; gap:2px;}
 .field-label{font-size:.66rem; color:var(--sub);}
 .fields input, .fields select{
@@ -106,7 +112,7 @@ button.reset:hover{border-color:var(--accent); color:var(--accent);}
 <div class="wrap">
   <header>
     <h1>新規開業準備 進捗管理</h1>
-    <p class="lead">担当者・納期・発注先・承認状況をあわせて管理できます。変更はスプレッドシートと共有されます。</p>
+    <p class="lead">ステータス・担当者・納期・発注先・承認状況をあわせて管理できます。変更はスプレッドシートと共有されます。</p>
   </header>
 
   <div class="progress-card">
@@ -118,7 +124,7 @@ button.reset:hover{border-color:var(--accent); color:var(--accent);}
     </svg>
     <div class="progress-text">
       <div class="progress-num" id="pctNum">0%</div>
-      <div class="progress-sub" id="pctSub">0 / 0 完了</div>
+      <div class="progress-sub" id="pctSub">完了 0 / 0</div>
       <div class="progress-sub" id="apprSub">承認済み 0 / 0</div>
       <div class="bar-track"><div class="bar-fill" id="barFill" style="width:0%"></div></div>
     </div>
@@ -132,7 +138,7 @@ button.reset:hover{border-color:var(--accent); color:var(--accent);}
   <div id="categories"></div>
 
   <footer>
-    <button class="reset" id="resetBtn">チェックをすべてリセット</button>
+    <button class="reset" id="resetBtn">ステータスをすべて「未対応」に戻す</button>
   </footer>
 </div>
 
@@ -152,10 +158,6 @@ const DATA = [
   ]},
   { id: "jimu", title: "事務的備品", items: [
       { t: "事務的備品一式の手配" },
-  ]},
-  { id: "keiri", title: "経理対応", items: [
-      { t: "入出金管理の体制構築" },
-      { t: "手持ち現金の管理体制構築" },
   ]},
   { id: "iryoki", title: "医療機器等の購入", items: [
       { t: "電子カルテ" },
@@ -181,9 +183,10 @@ const DATA = [
 
 const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbx-jPnyjqfcHuIPj8u-LsMG1urnmQmbN4WpPjtuny61--EpIgHJv_4BPKYrwsYEOWUUjw/exec";
 const POLL_MS = 6000;
-const EMPTY_ITEM = { checked:false, assignee:"", due:"", vendor:"", approval:"" };
+const EMPTY_ITEM = { status:"未対応", assignee:"", due:"", vendor:"", approval:"" };
+const STATUS_OPTIONS = ["未対応", "発注済", "完了"];
 
-const STORAGE_KEY = "clinic-prep-progress-v2";
+const STORAGE_KEY = "clinic-prep-progress-v3";
 let state = {};
 let mode = "local";
 let pollTimer = null;
@@ -258,13 +261,19 @@ async function initSync() {
   }
 }
 
+function statusClass(s) {
+  if (s === "発注済") return "st-ordered";
+  if (s === "完了") return "st-done";
+  return "";
+}
+
 function render() {
   const root = document.getElementById("categories");
   root.innerHTML = "";
   let total = 0, doneCount = 0, apprTotal = 0, apprDone = 0;
 
   DATA.forEach(cat => {
-    const catDone = cat.items.filter(it => itemOf(cat.id + ":" + it.t).checked).length;
+    const catDone = cat.items.filter(it => itemOf(cat.id + ":" + it.t).status === "完了").length;
     total += cat.items.length; doneCount += catDone;
 
     const el = document.createElement("div");
@@ -288,15 +297,17 @@ function render() {
       if (rec.approval === "承認済み") apprDone++;
 
       const row = document.createElement("div");
-      row.className = "item" + (rec.checked ? " done" : "");
+      row.className = "item" + (rec.status === "完了" ? " complete" : "");
 
-      const top = document.createElement("label");
+      const top = document.createElement("div");
       top.className = "item-top";
       top.innerHTML = `
-        <input type="checkbox" ${rec.checked ? "checked" : ""}>
         <span class="item-text">${it.t}</span>
+        <select class="f-status ${statusClass(rec.status)}">
+          ${STATUS_OPTIONS.map(s => `<option value="${s}" ${rec.status === s ? "selected" : ""}>${s}</option>`).join("")}
+        </select>
       `;
-      top.querySelector("input").addEventListener("change", (e) => updateField(key, "checked", e.target.checked));
+      top.querySelector(".f-status").addEventListener("change", (e) => updateField(key, "status", e.target.value));
       row.appendChild(top);
 
       const fields = document.createElement("div");
@@ -325,7 +336,7 @@ function render() {
 
   const pct = total ? Math.round((doneCount / total) * 100) : 0;
   document.getElementById("pctNum").textContent = pct + "%";
-  document.getElementById("pctSub").textContent = `${doneCount} / ${total} 完了`;
+  document.getElementById("pctSub").textContent = `完了 ${doneCount} / ${total}`;
   document.getElementById("apprSub").textContent = `承認済み ${apprDone} / ${apprTotal}`;
   document.getElementById("barFill").style.width = pct + "%";
   const circumference = 188.5;
@@ -333,11 +344,11 @@ function render() {
 }
 
 document.getElementById("resetBtn").addEventListener("click", async () => {
-  if (!confirm("すべてのチェックをリセットしますか？（担当者・納期・発注先・承認状況は残ります）")) return;
+  if (!confirm("すべてのステータスを「未対応」に戻しますか？（担当者・納期・発注先・承認状況は残ります）")) return;
   const keys = Object.keys(state);
-  for (const k of keys) { state[k] = { ...itemOf(k), checked: false }; }
+  for (const k of keys) { state[k] = { ...itemOf(k), status: "未対応" }; }
   if (mode === "shared") {
-    for (const k of keys) { try { await pushField(k, "checked", "false"); } catch(e) {} }
+    for (const k of keys) { try { await pushField(k, "status", "未対応"); } catch(e) {} }
   } else {
     saveLocal();
   }
