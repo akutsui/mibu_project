@@ -72,7 +72,6 @@ h1{font-size:1.5rem; font-weight:900; margin:0 0 4px; letter-spacing:.02em;}
 .cat-count{font-variant-numeric:tabular-nums;}
 .chev{transition:transform .2s ease; color:var(--sub); font-size:.8rem;}
 .cat.open .chev{transform:rotate(90deg);}
-.cat-note{padding:0 16px 12px; margin-top:-6px; color:var(--sub); font-size:.78rem;}
 .items{max-height:0; overflow:hidden; transition:max-height .25s ease;}
 .cat.open .items{max-height:4000px;}
 .item{padding:12px 16px; border-top:1px solid var(--line);}
@@ -80,21 +79,18 @@ h1{font-size:1.5rem; font-weight:900; margin:0 0 4px; letter-spacing:.02em;}
 .item-top input{margin-top:3px; width:17px; height:17px; accent-color:var(--accent); flex-shrink:0;}
 .item-text{font-size:.9rem; line-height:1.45;}
 .item.done .item-text{color:var(--sub); text-decoration:line-through;}
-.badge{
-  display:inline-block; font-size:.7rem; padding:1px 7px; border-radius:99px;
-  background:var(--accent-soft); color:var(--accent); margin-left:6px; white-space:nowrap;
-}
-.item.done .badge{background:var(--done-bg); color:var(--done);}
 
-.fields{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; padding-left:27px;}
+.fields{display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; padding-left:27px;}
+.field{display:flex; flex-direction:column; gap:2px;}
+.field-label{font-size:.66rem; color:var(--sub);}
 .fields input, .fields select{
   font-family:inherit; font-size:.78rem; padding:5px 8px; border-radius:7px;
   border:1px solid var(--line); background:var(--bg); color:var(--ink); min-width:0;
 }
 .f-assignee{width:98px;}
-.f-due{width:132px;}
+.f-due{width:140px;}
 .f-vendor{width:130px;}
-.f-approval{width:110px; cursor:pointer;}
+.f-approval{width:110px; cursor:pointer; align-self:flex-end;}
 .f-approval.ap-pending{background:var(--warn-bg); color:var(--warn); border-color:var(--warn);}
 .f-approval.ap-approved{background:var(--done-bg); color:var(--done); border-color:var(--done);}
 
@@ -110,7 +106,7 @@ button.reset:hover{border-color:var(--accent); color:var(--accent);}
 <div class="wrap">
   <header>
     <h1>新規開業準備 進捗管理</h1>
-    <p class="lead">担当者・期限・発注先・承認状況をあわせて管理できます。変更はスプレッドシートと共有されます。</p>
+    <p class="lead">担当者・納期・発注先・承認状況をあわせて管理できます。変更はスプレッドシートと共有されます。</p>
   </header>
 
   <div class="progress-card">
@@ -142,41 +138,41 @@ button.reset:hover{border-color:var(--accent); color:var(--accent);}
 
 <script>
 const DATA = [
-  { id: "somu", title: "総務的備品", note: "11〜12月に準備", items: [
+  { id: "somu", title: "総務的備品", items: [
       { t: "通信設備系（PBX関連・複合機）" },
       { t: "職員用冷蔵庫" },
       { t: "掃除機" },
       { t: "什器類（キャビネット・スチールラック）" },
       { t: "シュレッダー" },
-      { t: "駐車場の確保", d: "近隣に空きなし。徒歩10分圏内なら可。必要20台／施設前4台のみ" },
-      { t: "車両の手配", d: "開業1か月前まで" },
+      { t: "駐車場の確保" },
+      { t: "車両の手配" },
       { t: "ウォーターサーバー" },
-      { t: "アルコールチェッカー", d: "1か月前" },
-      { t: "各種アカウントの設定", d: "1か月前" },
+      { t: "アルコールチェッカー" },
+      { t: "各種アカウントの設定" },
   ]},
-  { id: "jimu", title: "事務的備品", note: "サポートチームに依頼", items: [
-      { t: "事務的備品一式の手配依頼" },
+  { id: "jimu", title: "事務的備品", items: [
+      { t: "事務的備品一式の手配" },
   ]},
-  { id: "keiri", title: "経理対応", note: "", items: [
+  { id: "keiri", title: "経理対応", items: [
       { t: "入出金管理の体制構築" },
       { t: "手持ち現金の管理体制構築" },
   ]},
-  { id: "iryoki", title: "医療機器等の購入", note: "保健所の検査に間に合うように", items: [
-      { t: "電子カルテ", d: "1か月前" },
-      { t: "ポータブルエコー（V-SCAN候補）", d: "1台" },
-      { t: "ポータブル心電図", d: "1台" },
-      { t: "医療用冷蔵庫", d: "1台" },
-      { t: "滅菌機", d: "1台" },
-      { t: "麻薬金庫", d: "1台" },
+  { id: "iryoki", title: "医療機器等の購入", items: [
+      { t: "電子カルテ" },
+      { t: "ポータブルエコー（V-SCAN候補）" },
+      { t: "ポータブル心電図" },
+      { t: "医療用冷蔵庫" },
+      { t: "滅菌機" },
+      { t: "麻薬金庫" },
       { t: "医療用廃棄物の処理手配" },
   ]},
-  { id: "zairyo", title: "医療材料等", note: "卸から購入するには届出の控えが必要", items: [
-      { t: "卸への発注手配", d: "直前に対応" },
+  { id: "zairyo", title: "医療材料等", items: [
+      { t: "卸への発注手配" },
   ]},
-  { id: "bag", title: "診療バッグ等", note: "サポートチームと連携対応", items: [
+  { id: "bag", title: "診療バッグ等", items: [
       { t: "診療バッグ等の準備" },
   ]},
-  { id: "gaichu", title: "外注契約", note: "", items: [
+  { id: "gaichu", title: "外注契約", items: [
       { t: "検体検査の外注契約" },
       { t: "医療ごみ処理の外注契約" },
       { t: "産業ごみ（一般ごみ）処理の外注契約" },
@@ -188,7 +184,7 @@ const POLL_MS = 6000;
 const EMPTY_ITEM = { checked:false, assignee:"", due:"", vendor:"", approval:"" };
 
 const STORAGE_KEY = "clinic-prep-progress-v2";
-let state = {};      // key -> {checked, assignee, due, vendor, approval}
+let state = {};
 let mode = "local";
 let pollTimer = null;
 let pending = false;
@@ -283,13 +279,6 @@ function render() {
     head.addEventListener("click", () => { openState[cat.id] = !openState[cat.id]; render(); });
     el.appendChild(head);
 
-    if (cat.note) {
-      const note = document.createElement("div");
-      note.className = "cat-note";
-      note.textContent = cat.note;
-      el.appendChild(note);
-    }
-
     const itemsWrap = document.createElement("div");
     itemsWrap.className = "items";
     cat.items.forEach(it => {
@@ -305,7 +294,7 @@ function render() {
       top.className = "item-top";
       top.innerHTML = `
         <input type="checkbox" ${rec.checked ? "checked" : ""}>
-        <span class="item-text">${it.t}${it.d ? `<span class="badge">${it.d}</span>` : ""}</span>
+        <span class="item-text">${it.t}</span>
       `;
       top.querySelector("input").addEventListener("change", (e) => updateField(key, "checked", e.target.checked));
       row.appendChild(top);
@@ -313,9 +302,9 @@ function render() {
       const fields = document.createElement("div");
       fields.className = "fields";
       fields.innerHTML = `
-        <input class="f-assignee" placeholder="担当者" value="${rec.assignee || ""}">
-        <input class="f-due" type="date" value="${rec.due || ""}">
-        <input class="f-vendor" placeholder="発注先" value="${rec.vendor || ""}">
+        <div class="field"><span class="field-label">担当者</span><input class="f-assignee" placeholder="氏名" value="${rec.assignee || ""}"></div>
+        <div class="field"><span class="field-label">納期</span><input class="f-due" type="date" value="${rec.due || ""}"></div>
+        <div class="field"><span class="field-label">発注先</span><input class="f-vendor" placeholder="会社名" value="${rec.vendor || ""}"></div>
         <select class="f-approval ${rec.approval === "申請中" ? "ap-pending" : rec.approval === "承認済み" ? "ap-approved" : ""}">
           <option value="" ${rec.approval === "" ? "selected" : ""}>承認: 未定</option>
           <option value="申請中" ${rec.approval === "申請中" ? "selected" : ""}>承認: 申請中</option>
@@ -344,7 +333,7 @@ function render() {
 }
 
 document.getElementById("resetBtn").addEventListener("click", async () => {
-  if (!confirm("すべてのチェックをリセットしますか？（担当者・期限・発注先・承認状況は残ります）")) return;
+  if (!confirm("すべてのチェックをリセットしますか？（担当者・納期・発注先・承認状況は残ります）")) return;
   const keys = Object.keys(state);
   for (const k of keys) { state[k] = { ...itemOf(k), checked: false }; }
   if (mode === "shared") {
