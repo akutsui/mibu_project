@@ -62,21 +62,27 @@ h1{font-size:1.5rem; font-weight:900; margin:0 0 4px; letter-spacing:.02em;}
 .dot.live{background:var(--done);}
 .dot.local{background:var(--accent);}
 
+.icon-btn{
+  background:none; border:none; color:var(--sub); font-size:.85rem; cursor:pointer;
+  padding:2px 5px; border-radius:6px; line-height:1;
+}
+.icon-btn:hover{color:var(--accent); background:var(--accent-soft);}
+
 .cat{margin-bottom:18px; border:1px solid var(--line); border-radius:14px; background:var(--card); overflow:hidden;}
 .cat-head{
-  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  display:flex; align-items:center; justify-content:space-between; gap:6px;
   padding:14px 16px; cursor:pointer; user-select:none;
 }
-.cat-title{font-weight:700; font-size:.98rem;}
-.cat-meta{display:flex; align-items:center; gap:10px; color:var(--sub); font-size:.78rem; white-space:nowrap;}
-.cat-count{font-variant-numeric:tabular-nums;}
-.chev{transition:transform .2s ease; color:var(--sub); font-size:.8rem;}
+.cat-title{font-weight:700; font-size:.98rem; flex:1;}
+.cat-meta{display:flex; align-items:center; gap:2px; color:var(--sub); font-size:.78rem; white-space:nowrap;}
+.cat-count{font-variant-numeric:tabular-nums; margin-right:4px;}
+.chev{transition:transform .2s ease; color:var(--sub); font-size:.8rem; margin-left:2px;}
 .cat.open .chev{transform:rotate(90deg);}
 .items{max-height:0; overflow:hidden; transition:max-height .25s ease;}
-.cat.open .items{max-height:4000px;}
+.cat.open .items{max-height:5000px;}
 .item{padding:12px 16px; border-top:1px solid var(--line);}
-.item-top{display:flex; align-items:center; justify-content:space-between; gap:10px;}
-.item-text{font-size:.9rem; line-height:1.45;}
+.item-top{display:flex; align-items:center; gap:6px;}
+.item-text{font-size:.9rem; line-height:1.45; flex:1;}
 .item.complete .item-text{color:var(--sub); text-decoration:line-through;}
 
 .f-status{
@@ -100,6 +106,17 @@ h1{font-size:1.5rem; font-weight:900; margin:0 0 4px; letter-spacing:.02em;}
 .f-approval.ap-pending{background:var(--warn-bg); color:var(--warn); border-color:var(--warn);}
 .f-approval.ap-approved{background:var(--done-bg); color:var(--done); border-color:var(--done);}
 
+.add-row{
+  padding:12px 16px; border-top:1px solid var(--line); color:var(--accent);
+  font-size:.86rem; cursor:pointer; text-align:center;
+}
+.add-row:hover{background:var(--accent-soft);}
+.add-cat{
+  border:1px dashed var(--line); border-radius:14px; padding:14px; text-align:center;
+  color:var(--accent); font-size:.9rem; cursor:pointer; margin-bottom:18px;
+}
+.add-cat:hover{background:var(--accent-soft); border-color:var(--accent);}
+
 footer{text-align:center; color:var(--sub); font-size:.76rem; margin-top:30px;}
 button.reset{
   background:none; border:1px solid var(--line); color:var(--sub); border-radius:8px;
@@ -112,7 +129,7 @@ button.reset:hover{border-color:var(--accent); color:var(--accent);}
 <div class="wrap">
   <header>
     <h1>新規開業準備 進捗管理</h1>
-    <p class="lead">ステータス・担当者・納期・発注先・承認状況をあわせて管理できます。変更はスプレッドシートと共有されます。</p>
+    <p class="lead">カテゴリ・タスクの追加/編集/削除ができます。変更はスプレッドシートと共有されます。</p>
   </header>
 
   <div class="progress-card">
@@ -131,11 +148,12 @@ button.reset:hover{border-color:var(--accent); color:var(--accent);}
   </div>
 
   <div class="milestone">
-    内装工事は<b>着工済み</b>。完了・引き渡し予定日は<b>11月16日</b>。総務的備品は11〜12月に準備予定。
+    内装工事は<b>着工済み</b>。完了・引き渡し予定日は<b>11月16日</b>。
   </div>
   <div class="sync" id="syncStatus"><span class="dot"></span><span>接続を確認中…</span></div>
 
   <div id="categories"></div>
+  <div class="add-cat" id="addCatBtn">＋ カテゴリを追加</div>
 
   <footer>
     <button class="reset" id="resetBtn">ステータスをすべて「未対応」に戻す</button>
@@ -143,121 +161,121 @@ button.reset:hover{border-color:var(--accent); color:var(--accent);}
 </div>
 
 <script>
-const DATA = [
-  { id: "somu", title: "総務的備品", items: [
-      { t: "通信設備系（PBX関連・複合機）" },
-      { t: "職員用冷蔵庫" },
-      { t: "掃除機" },
-      { t: "什器類（キャビネット・スチールラック）" },
-      { t: "シュレッダー" },
-      { t: "駐車場の確保" },
-      { t: "車両の手配" },
-      { t: "ウォーターサーバー" },
-      { t: "アルコールチェッカー" },
-      { t: "各種アカウントの設定" },
+// 初期データ（初回のみ、シートが空のときに自動投入されます）
+const SEED = [
+  { title: "総務的備品", tasks: [
+      "通信設備系（PBX関連・複合機）","職員用冷蔵庫","掃除機","什器類（キャビネット・スチールラック）",
+      "シュレッダー","駐車場の確保","車両の手配","ウォーターサーバー","アルコールチェッカー","各種アカウントの設定"
   ]},
-  { id: "jimu", title: "事務的備品", items: [
-      { t: "事務的備品一式の手配" },
+  { title: "事務的備品", tasks: ["事務的備品一式の手配"] },
+  { title: "医療機器等の購入", tasks: [
+      "電子カルテ","ポータブルエコー（V-SCAN候補）","ポータブル心電図","医療用冷蔵庫","滅菌機","麻薬金庫","医療用廃棄物の処理手配"
   ]},
-  { id: "iryoki", title: "医療機器等の購入", items: [
-      { t: "電子カルテ" },
-      { t: "ポータブルエコー（V-SCAN候補）" },
-      { t: "ポータブル心電図" },
-      { t: "医療用冷蔵庫" },
-      { t: "滅菌機" },
-      { t: "麻薬金庫" },
-      { t: "医療用廃棄物の処理手配" },
-  ]},
-  { id: "zairyo", title: "医療材料等", items: [
-      { t: "卸への発注手配" },
-  ]},
-  { id: "bag", title: "診療バッグ等", items: [
-      { t: "診療バッグ等の準備" },
-  ]},
-  { id: "gaichu", title: "外注契約", items: [
-      { t: "検体検査の外注契約" },
-      { t: "医療ごみ処理の外注契約" },
-      { t: "産業ごみ（一般ごみ）処理の外注契約" },
-  ]},
+  { title: "医療材料等", tasks: ["卸への発注手配"] },
+  { title: "診療バッグ等", tasks: ["診療バッグ等の準備"] },
+  { title: "外注契約", tasks: ["検体検査の外注契約","医療ごみ処理の外注契約","産業ごみ（一般ごみ）処理の外注契約"] },
 ];
 
 const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbx-jPnyjqfcHuIPj8u-LsMG1urnmQmbN4WpPjtuny61--EpIgHJv_4BPKYrwsYEOWUUjw/exec";
 const POLL_MS = 6000;
-const EMPTY_ITEM = { status:"未対応", assignee:"", due:"", vendor:"", approval:"" };
 const STATUS_OPTIONS = ["未対応", "発注済", "完了"];
+const STORAGE_KEY = "clinic-prep-progress-v4";
 
-const STORAGE_KEY = "clinic-prep-progress-v3";
-let state = {};
+let categories = [];
+let tasks = [];
 let mode = "local";
-let pollTimer = null;
 let pending = false;
 const openState = {};
 
+function genId(prefix){ return prefix + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
 try {
   const raw = localStorage.getItem(STORAGE_KEY);
-  state = raw ? JSON.parse(raw) : {};
-} catch(e) { state = {}; }
-
-function itemOf(key){ return state[key] || {...EMPTY_ITEM}; }
+  if (raw) { const d = JSON.parse(raw); categories = d.categories || []; tasks = d.tasks || []; }
+} catch(e) {}
 
 function setSyncBanner(kind, text) {
   document.getElementById("syncStatus").innerHTML =
     `<span class="dot ${kind === "shared" ? "live" : "local"}"></span><span>${text}</span>`;
 }
 function saveLocal() {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify({categories, tasks})); } catch(e) {}
 }
 
-async function fetchState() {
-  const res = await fetch(WEBAPP_URL + "?action=get");
-  if (!res.ok) throw new Error("fetch failed");
-  const data = await res.json();
-  return data.items || {};
+async function callApi(params) {
+  const qs = Object.entries(params).map(([k,v]) => k + "=" + encodeURIComponent(v)).join("&");
+  const res = await fetch(WEBAPP_URL + "?" + qs);
+  if (!res.ok) throw new Error("api failed");
+  return res.json();
 }
-async function pushField(key, field, value) {
-  const url = WEBAPP_URL + "?action=update&key=" + encodeURIComponent(key) +
-    "&field=" + field + "&value=" + encodeURIComponent(value);
-  const res = await fetch(url);
-  if (!res.ok) throw new Error("update failed");
-  const data = await res.json();
-  return data.items || {};
+
+async function seedIfEmpty() {
+  if (categories.length > 0) return;
+  for (const cat of SEED) {
+    const catId = genId("c");
+    await doAction("addCategory", { id: catId, title: cat.title }, () => {
+      categories.push({ id: catId, title: cat.title });
+    });
+    for (const text of cat.tasks) {
+      const taskId = genId("t");
+      await doAction("addTask", { id: taskId, catId, text }, () => {
+        tasks.push({ id: taskId, catId, text, status:"未対応", assignee:"", due:"", vendor:"", approval:"" });
+      });
+    }
+  }
 }
+
+async function doAction(action, params, localMutate) {
+  if (mode === "shared") {
+    try {
+      const data = await callApi({ action, ...params });
+      categories = data.categories || categories;
+      tasks = data.tasks || tasks;
+      return;
+    } catch (e) {
+      setSyncBanner("local", "更新の送信に失敗しました。接続を確認してください");
+    }
+  }
+  localMutate();
+  saveLocal();
+}
+
 async function poll() {
   if (pending) return;
   try {
-    state = await fetchState();
+    const data = await callApi({ action: "get" });
+    categories = data.categories || [];
+    tasks = data.tasks || [];
     setSyncBanner("shared", "スプレッドシートと共有中（数秒ごとに自動更新）");
     render();
   } catch (e) {
     setSyncBanner("local", "共有先に接続できません（この端末にのみ保存されます）");
   }
 }
-function updateField(key, field, value) {
-  state[key] = { ...itemOf(key), [field]: value };
-  if (mode === "shared") {
-    pending = true;
-    pushField(key, field, value)
-      .then(items => { state = items; })
-      .catch(() => { setSyncBanner("local", "更新の送信に失敗しました。接続を確認してください"); })
-      .finally(() => { pending = false; render(); });
-  } else {
-    saveLocal();
-    render();
-  }
-}
+
 async function initSync() {
   if (!WEBAPP_URL || WEBAPP_URL.indexOf("PASTE_YOUR") === 0) {
     setSyncBanner("local", "この端末にのみ保存されます（WEBAPP_URL未設定）");
+    if (categories.length === 0) { SEED.forEach(cat => {
+      const catId = genId("c");
+      categories.push({ id: catId, title: cat.title });
+      cat.tasks.forEach(text => tasks.push({ id: genId("t"), catId, text, status:"未対応", assignee:"", due:"", vendor:"", approval:"" }));
+    }); saveLocal(); }
+    render();
     return;
   }
   try {
-    state = await fetchState();
+    const data = await callApi({ action: "get" });
+    categories = data.categories || [];
+    tasks = data.tasks || [];
     mode = "shared";
+    await seedIfEmpty();
     setSyncBanner("shared", "スプレッドシートと共有中（数秒ごとに自動更新）");
     render();
-    pollTimer = setInterval(poll, POLL_MS);
+    setInterval(poll, POLL_MS);
   } catch (e) {
     setSyncBanner("local", "共有先に接続できません（この端末にのみ保存されます）");
+    render();
   }
 }
 
@@ -267,14 +285,56 @@ function statusClass(s) {
   return "";
 }
 
+// ---- カテゴリ/タスク操作 ----
+function addCategory() {
+  const title = prompt("新しいカテゴリ名を入力してください");
+  if (!title || !title.trim()) return;
+  const id = genId("c");
+  doAction("addCategory", { id, title: title.trim() }, () => categories.push({ id, title: title.trim() }))
+    .then(render);
+}
+function renameCategory(cat) {
+  const title = prompt("カテゴリ名を編集", cat.title);
+  if (!title || !title.trim() || title.trim() === cat.title) return;
+  doAction("renameCategory", { id: cat.id, title: title.trim() }, () => { cat.title = title.trim(); }).then(render);
+}
+function deleteCategory(cat) {
+  if (!confirm(`「${cat.title}」と中のタスクをすべて削除しますか？`)) return;
+  doAction("deleteCategory", { id: cat.id }, () => {
+    categories = categories.filter(c => c.id !== cat.id);
+    tasks = tasks.filter(t => t.catId !== cat.id);
+  }).then(render);
+}
+function addTask(catId) {
+  const text = prompt("新しいタスク名を入力してください");
+  if (!text || !text.trim()) return;
+  const id = genId("t");
+  doAction("addTask", { id, catId, text: text.trim() }, () =>
+    tasks.push({ id, catId, text: text.trim(), status:"未対応", assignee:"", due:"", vendor:"", approval:"" })
+  ).then(render);
+}
+function renameTask(task) {
+  const text = prompt("タスク名を編集", task.text);
+  if (!text || !text.trim() || text.trim() === task.text) return;
+  doAction("renameTask", { id: task.id, text: text.trim() }, () => { task.text = text.trim(); }).then(render);
+}
+function deleteTask(task) {
+  if (!confirm(`「${task.text}」を削除しますか？`)) return;
+  doAction("deleteTask", { id: task.id }, () => { tasks = tasks.filter(t => t.id !== task.id); }).then(render);
+}
+function updateTaskField(task, field, value) {
+  doAction("updateTask", { id: task.id, field, value }, () => { task[field] = value; }).then(render);
+}
+
 function render() {
   const root = document.getElementById("categories");
   root.innerHTML = "";
   let total = 0, doneCount = 0, apprTotal = 0, apprDone = 0;
 
-  DATA.forEach(cat => {
-    const catDone = cat.items.filter(it => itemOf(cat.id + ":" + it.t).status === "完了").length;
-    total += cat.items.length; doneCount += catDone;
+  categories.forEach(cat => {
+    const catTasks = tasks.filter(t => t.catId === cat.id);
+    const catDone = catTasks.filter(t => t.status === "完了").length;
+    total += catTasks.length; doneCount += catDone;
 
     const el = document.createElement("div");
     el.className = "cat" + (openState[cat.id] ? " open" : "");
@@ -282,54 +342,76 @@ function render() {
     const head = document.createElement("div");
     head.className = "cat-head";
     head.innerHTML = `
-      <span class="cat-title">${cat.title}</span>
-      <span class="cat-meta"><span class="cat-count">${catDone}/${cat.items.length}</span><span class="chev">›</span></span>
+      <span class="cat-title"></span>
+      <span class="cat-meta">
+        <span class="cat-count">${catDone}/${catTasks.length}</span>
+        <button class="icon-btn" data-act="edit">✎</button>
+        <button class="icon-btn" data-act="del">×</button>
+        <span class="chev">›</span>
+      </span>
     `;
+    head.querySelector(".cat-title").textContent = cat.title;
     head.addEventListener("click", () => { openState[cat.id] = !openState[cat.id]; render(); });
+    head.querySelector('[data-act="edit"]').addEventListener("click", (e) => { e.stopPropagation(); renameCategory(cat); });
+    head.querySelector('[data-act="del"]').addEventListener("click", (e) => { e.stopPropagation(); deleteCategory(cat); });
     el.appendChild(head);
 
     const itemsWrap = document.createElement("div");
     itemsWrap.className = "items";
-    cat.items.forEach(it => {
-      const key = cat.id + ":" + it.t;
-      const rec = itemOf(key);
+    catTasks.forEach(task => {
       apprTotal++;
-      if (rec.approval === "承認済み") apprDone++;
+      if (task.approval === "承認済み") apprDone++;
 
       const row = document.createElement("div");
-      row.className = "item" + (rec.status === "完了" ? " complete" : "");
+      row.className = "item" + (task.status === "完了" ? " complete" : "");
 
       const top = document.createElement("div");
       top.className = "item-top";
       top.innerHTML = `
-        <span class="item-text">${it.t}</span>
-        <select class="f-status ${statusClass(rec.status)}">
-          ${STATUS_OPTIONS.map(s => `<option value="${s}" ${rec.status === s ? "selected" : ""}>${s}</option>`).join("")}
+        <span class="item-text"></span>
+        <button class="icon-btn" data-act="edit">✎</button>
+        <button class="icon-btn" data-act="del">×</button>
+        <select class="f-status ${statusClass(task.status)}">
+          ${STATUS_OPTIONS.map(s => `<option value="${s}" ${task.status === s ? "selected" : ""}>${s}</option>`).join("")}
         </select>
       `;
-      top.querySelector(".f-status").addEventListener("change", (e) => updateField(key, "status", e.target.value));
+      top.querySelector(".item-text").textContent = task.text;
+      top.querySelector('[data-act="edit"]').addEventListener("click", () => renameTask(task));
+      top.querySelector('[data-act="del"]').addEventListener("click", () => deleteTask(task));
+      top.querySelector(".f-status").addEventListener("change", (e) => updateTaskField(task, "status", e.target.value));
       row.appendChild(top);
 
       const fields = document.createElement("div");
       fields.className = "fields";
       fields.innerHTML = `
-        <div class="field"><span class="field-label">担当者</span><input class="f-assignee" placeholder="氏名" value="${rec.assignee || ""}"></div>
-        <div class="field"><span class="field-label">納期</span><input class="f-due" type="date" value="${rec.due || ""}"></div>
-        <div class="field"><span class="field-label">発注先</span><input class="f-vendor" placeholder="会社名" value="${rec.vendor || ""}"></div>
-        <select class="f-approval ${rec.approval === "申請中" ? "ap-pending" : rec.approval === "承認済み" ? "ap-approved" : ""}">
-          <option value="" ${rec.approval === "" ? "selected" : ""}>承認: 未定</option>
-          <option value="申請中" ${rec.approval === "申請中" ? "selected" : ""}>承認: 申請中</option>
-          <option value="承認済み" ${rec.approval === "承認済み" ? "selected" : ""}>承認: 承認済み</option>
+        <div class="field"><span class="field-label">担当者</span><input class="f-assignee" placeholder="氏名"></div>
+        <div class="field"><span class="field-label">納期</span><input class="f-due" type="date"></div>
+        <div class="field"><span class="field-label">発注先</span><input class="f-vendor" placeholder="会社名"></div>
+        <select class="f-approval ${task.approval === "申請中" ? "ap-pending" : task.approval === "承認済み" ? "ap-approved" : ""}">
+          <option value="">承認: 未定</option>
+          <option value="申請中">承認: 申請中</option>
+          <option value="承認済み">承認: 承認済み</option>
         </select>
       `;
-      fields.querySelector(".f-assignee").addEventListener("change", (e) => updateField(key, "assignee", e.target.value));
-      fields.querySelector(".f-due").addEventListener("change", (e) => updateField(key, "due", e.target.value));
-      fields.querySelector(".f-vendor").addEventListener("change", (e) => updateField(key, "vendor", e.target.value));
-      fields.querySelector(".f-approval").addEventListener("change", (e) => updateField(key, "approval", e.target.value));
+      fields.querySelector(".f-assignee").value = task.assignee || "";
+      fields.querySelector(".f-due").value = task.due || "";
+      fields.querySelector(".f-vendor").value = task.vendor || "";
+      fields.querySelector(".f-approval").value = task.approval || "";
+      fields.querySelector(".f-assignee").addEventListener("change", (e) => updateTaskField(task, "assignee", e.target.value));
+      fields.querySelector(".f-due").addEventListener("change", (e) => updateTaskField(task, "due", e.target.value));
+      fields.querySelector(".f-vendor").addEventListener("change", (e) => updateTaskField(task, "vendor", e.target.value));
+      fields.querySelector(".f-approval").addEventListener("change", (e) => updateTaskField(task, "approval", e.target.value));
       row.appendChild(fields);
 
       itemsWrap.appendChild(row);
     });
+
+    const addTaskRow = document.createElement("div");
+    addTaskRow.className = "add-row";
+    addTaskRow.textContent = "＋ タスクを追加";
+    addTaskRow.addEventListener("click", () => addTask(cat.id));
+    itemsWrap.appendChild(addTaskRow);
+
     el.appendChild(itemsWrap);
     root.appendChild(el);
   });
@@ -343,14 +425,11 @@ function render() {
   document.getElementById("ringFill").style.strokeDashoffset = circumference - (circumference * pct / 100);
 }
 
+document.getElementById("addCatBtn").addEventListener("click", addCategory);
 document.getElementById("resetBtn").addEventListener("click", async () => {
   if (!confirm("すべてのステータスを「未対応」に戻しますか？（担当者・納期・発注先・承認状況は残ります）")) return;
-  const keys = Object.keys(state);
-  for (const k of keys) { state[k] = { ...itemOf(k), status: "未対応" }; }
-  if (mode === "shared") {
-    for (const k of keys) { try { await pushField(k, "status", "未対応"); } catch(e) {} }
-  } else {
-    saveLocal();
+  for (const t of tasks) {
+    await doAction("updateTask", { id: t.id, field: "status", value: "未対応" }, () => { t.status = "未対応"; });
   }
   render();
 });
