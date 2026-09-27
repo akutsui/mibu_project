@@ -3,241 +3,366 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>新規開業準備 進捗管理</title>
+<title>新規開業準備 進捗管理ツール</title>
 <style>
 :root {
-  --bg: #f8f6f0;       /* 全体の背景色（薄茶色） */
-  --card: #ffffff;
-  --text: #333333;
-  --sub: #7a756b;
-  --line: #e8e3d8;
-  --accent: #a39171;
-  --done: #6b8e23;
-  --done-bg: #f0f4e6;
-  --warn: #c27a29;
-  --warn-bg: #fcf4e8;
+  --bg: #f8f6f0; --card: #ffffff; --text: #333333; --sub: #7a756b; --line: #e8e3d8; 
+  --accent: #a39171; --done: #6b8e23; --warn: #c27a29; --danger: #dc3545;
 }
-body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 16px; }
-.wrap { max-width: 800px; margin: 0 auto; }
-header { margin-bottom: 24px; text-align: center; }
-h1 { font-size: 1.5rem; margin: 0 0 8px; color: #222; }
-p.lead { font-size: .85rem; color: var(--sub); margin: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 16px; }
+.wrap { max-width: 900px; margin: 0 auto; }
+header { text-align: center; margin-bottom: 24px; }
+h1 { font-size: 1.5rem; margin: 0 0 8px; }
+.controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 2px solid var(--line); padding-bottom: 12px;}
 
-.progress-card { background: var(--card); border-radius: 12px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.04); margin-bottom: 24px; display: flex; align-items: center; gap: 20px; border: 1px solid var(--line); }
-.progress-ring { position: relative; width: 64px; height: 64px; flex-shrink: 0; }
-.progress-ring svg { transform: rotate(-90deg); }
-.ring-bg { fill: none; stroke: var(--line); stroke-width: 6; }
-.ring-fill { fill: none; stroke: var(--accent); stroke-width: 6; stroke-dasharray: 188.5; stroke-dashoffset: 188.5; transition: stroke-dashoffset .5s ease; stroke-linecap: round; }
-.progress-text { flex-grow: 1; }
-.progress-num { font-size: 1.5rem; font-weight: 700; color: #222; }
-.progress-sub { font-size: .75rem; color: var(--sub); margin-top: 2px; }
-.bar-track { height: 6px; background: var(--line); border-radius: 99px; margin-top: 8px; overflow: hidden; }
-.bar-fill { height: 100%; background: var(--accent); width: 0%; transition: width .5s ease; }
-
-.controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; }
-.status-text { font-size: 0.85rem; color: var(--sub); }
-.btn-group { display: flex; gap: 8px; }
-.btn { padding: 8px 16px; border-radius: 6px; border: 1px solid var(--line); background: var(--card); cursor: pointer; font-size: .85rem; transition: background .2s; color: var(--text); text-decoration: none; display: inline-block; }
-.btn:hover { background: #fdfbf7; }
+.btn { padding: 6px 14px; border-radius: 6px; border: 1px solid var(--line); background: var(--card); cursor: pointer; font-size: .85rem; color: var(--text); }
 .btn-primary { background: var(--accent); color: #fff; border: none; font-weight: bold; }
-.btn-primary:hover { background: #8f7d5e; }
+.btn-danger { color: var(--danger); border-color: var(--danger); }
 
-.cat { background: var(--card); border-radius: 8px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); overflow: hidden; border: 1px solid var(--line); }
-.cat-header { display: flex; justify-content: space-between; align-items: center; padding: 16px; cursor: pointer; font-weight: 600; }
-.cat-title { display: flex; align-items: center; gap: 8px; flex-grow: 1;}
-.cat-badge { background: #f4efeb; color: var(--sub); font-size: .75rem; padding: 2px 8px; border-radius: 99px; }
-.cat-icon { transition: transform .2s; font-size: .8rem; color: var(--sub); }
-.cat.open .cat-icon { transform: rotate(180deg); }
+/* リストビュー */
+.cat { background: var(--card); border-radius: 8px; margin-bottom: 12px; border: 1px solid var(--line); overflow: hidden; }
+.cat-header { display: flex; justify-content: space-between; padding: 16px; font-weight: bold; background: #faf9f6; cursor: pointer; }
+.item { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-top: 1px solid var(--line); cursor: pointer; transition: background 0.2s; }
+.item:hover { background: #fdfbf7; }
+.item-info { flex-grow: 1; display: flex; flex-direction: column; gap: 4px; }
+.item-title { font-size: 0.95rem; }
+.item-meta { font-size: 0.75rem; color: var(--sub); display: flex; gap: 12px; }
+.badge { padding: 4px 8px; border-radius: 99px; font-size: 0.75rem; font-weight: bold; border: 1px solid var(--line); }
+.badge.st-完了 { background: #f0f4e6; color: var(--done); border-color: var(--done); }
+.badge.st-発注済 { background: #fcf4e8; color: var(--warn); border-color: var(--warn); }
 
-.items { max-height: 0; overflow: hidden; transition: max-height .25s ease; }
-.cat.open .items { max-height: 4000px; }
-.item { padding: 12px 16px; border-top: 1px solid var(--line); }
-.item-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.item-text { font-size: .9rem; line-height: 1.45; flex-grow: 1;}
-.item.complete .item-text { color: var(--sub); text-decoration: line-through; }
+/* モーダル (詳細パネル) */
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; }
+.modal-content { background: #fff; width: 95%; max-width: 800px; max-height: 90vh; overflow-y: auto; border-radius: 8px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--line); padding-bottom: 12px; }
+.modal-title { font-size: 1.2rem; font-weight: bold; }
+.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.field-group { display: flex; flex-direction: column; gap: 4px; }
+.field-group label { font-size: 0.75rem; color: var(--sub); }
+.field-group input, .field-group select, .field-group textarea { padding: 8px; border: 1px solid var(--line); border-radius: 4px; font-family: inherit; font-size: 0.85rem; }
+.field-group textarea { resize: vertical; min-height: 60px; }
 
-.fields { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--line); }
-.field { display: flex; flex-direction: column; gap: 2px; }
-.field-label { font-size: .66rem; color: var(--sub); }
-.fields input, .fields select { font-family: inherit; font-size: .76rem; padding: 4px 6px; border: 1px solid var(--line); border-radius: 4px; background: var(--bg); color: var(--text); }
+/* 比較表 */
+.compare-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 0.85rem; }
+.compare-table th, .compare-table td { border: 1px solid var(--line); padding: 8px; text-align: left; }
+.compare-table th { background: #faf9f6; color: var(--sub); font-weight: normal; }
+.compare-table input, .compare-table textarea { width: 100%; border: none; background: transparent; font-family: inherit; font-size: 0.85rem; box-sizing: border-box; }
+.compare-table textarea { resize: vertical; min-height: 40px; }
 
-.f-status { font-family: inherit; font-size: .76rem; font-weight: 500; padding: 4px 9px; border-radius: 99px; border: 1px solid var(--line); background: var(--bg); color: var(--sub); cursor: pointer; flex-shrink: 0; }
-.f-status.st-ordered { background: var(--warn-bg); color: var(--warn); border-color: var(--warn); }
-.f-status.st-done { background: var(--done-bg); color: var(--done); border-color: var(--done); }
-
-footer { margin-top: 32px; text-align: center; }
-.reset { font-size: .8rem; color: var(--sub); background: none; border: none; text-decoration: underline; cursor: pointer; }
-#loader { text-align: center; padding: 40px; color: var(--sub); }
+/* 編集モード */
+.edit-cat { background: #faf9f6; border: 1px solid var(--line); border-radius: 6px; padding: 16px; margin-bottom: 16px; }
+.edit-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
+.edit-row input { flex-grow: 1; padding: 8px; border: 1px solid var(--line); border-radius: 4px; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <h1>新規開業準備 進捗管理</h1>
-    <p class="lead">ステータス・担当者・納期・発注先・承認状況を管理できます。</p>
+    <h1>📋 開業準備 一元管理ツール</h1>
+    <p style="font-size:0.85rem; color:var(--sub); margin:0;">タスクの確認・機器の比較選定・進捗更新がここで完結します。</p>
   </header>
 
   <div class="controls">
-    <span class="status-text" id="modeStatus">データ読み込み中...</span>
-    
-    <div class="btn-group">
-      <!-- 機器・備品 選定ボードへのリンク -->
-      <a href="equipment.html" class="btn">📝 機器選定ボード</a>
-      <!-- 管理画面へのリンク -->
-      <a href="admin.html" class="btn btn-primary">⚙️ 管理画面</a>
-    </div>
+    <span id="syncStatus" style="font-size:0.85rem; color:var(--done);">● 自動同期ON</span>
+    <button class="btn" id="toggleEditBtn" onclick="toggleEditMode()">構成を編集する</button>
   </div>
 
-  <div class="progress-card">
-    <div class="progress-ring">
-      <svg width="64" height="64"><circle class="ring-bg" cx="32" cy="32" r="30"></circle><circle class="ring-fill" id="ringFill" cx="32" cy="32" r="30"></circle></svg>
+  <div id="loader" style="text-align:center; padding:40px; color:var(--sub);">データを読み込んでいます...</div>
+  
+  <!-- 通常ビュー -->
+  <div id="viewMode"></div>
+
+  <!-- 編集モード -->
+  <div id="editMode" style="display:none;">
+    <div style="margin-bottom: 16px; text-align:right;">
+      <button class="btn btn-primary" onclick="saveTasks()">構成を保存して戻る</button>
     </div>
-    <div class="progress-text">
-      <div class="progress-num" id="pctNum">0%</div>
-      <div class="progress-sub" id="pctSub">完了 0 / 0</div>
-      <div class="progress-sub" id="apprSub">承認済み 0 / 0</div>
-      <div class="bar-track"><div class="bar-fill" id="barFill" style="width:0%"></div></div>
+    <div id="editPanel"></div>
+    <button class="btn" style="width:100%; padding:12px; border-style:dashed;" onclick="addCategory()">＋ 新しいカテゴリを追加</button>
+  </div>
+</div>
+
+<!-- 詳細パネル（モーダル） -->
+<div class="modal-overlay" id="taskModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div class="modal-title" id="mTitle">タスク詳細</div>
+      <button class="btn" onclick="closeModal()">✕ 閉じる</button>
+    </div>
+
+    <!-- 基本情報 -->
+    <div class="form-grid">
+      <div class="field-group">
+        <label>ステータス</label>
+        <select id="mStatus">
+          <option value="未対応">未対応</option>
+          <option value="発注済">発注済 / 契約済</option>
+          <option value="完了">完了</option>
+        </select>
+      </div>
+      <div class="field-group"><label>担当者</label><input type="text" id="mAssignee" placeholder="未定"></div>
+      <div class="field-group"><label>納期 / 完了予定</label><input type="date" id="mDue"></div>
+      <div class="field-group"><label>発注先 / 業者</label><input type="text" id="mVendor" placeholder="未定"></div>
+      <div class="field-group">
+        <label>承認状況</label>
+        <select id="mApproval"><option value="">-</option><option value="申請中">申請中</option><option value="承認済み">承認済み</option></select>
+      </div>
+    </div>
+
+    <!-- メモ・要件定義 -->
+    <div class="field-group" style="margin-bottom: 24px;">
+      <label>📝 フリーメモ・要件定義・参考URL</label>
+      <textarea id="mMemo" placeholder="例: 予算は〇〇万円以内、Mac対応必須、大家さんの連絡先..."></textarea>
+    </div>
+
+    <!-- 比較表エリア -->
+    <div style="margin-bottom: 24px;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <label style="font-size:0.75rem; color:var(--sub);">📊 比較表 (機器選定などに使用)</label>
+        <button class="btn" style="padding:4px 8px; font-size:0.75rem;" onclick="addCompareRow()">＋ 候補を追加</button>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="compare-table" id="mCompareTable">
+          <thead><tr><th width="12%">候補</th><th width="22%">メーカー/製品名</th><th width="22%">費用感</th><th width="22%">メリット(◯)</th><th width="22%">懸念点(△)</th></tr></thead>
+          <tbody id="mCompareBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div style="text-align: right; border-top: 1px solid var(--line); padding-top: 16px;">
+      <button class="btn btn-primary" id="mSaveBtn" onclick="saveModal()">保存して閉じる</button>
     </div>
   </div>
-
-  <div id="loader">データを読み込んでいます...</div>
-  <div id="categories"></div>
-
-  <footer>
-    <button class="reset" id="resetBtn">ステータスをすべて「未対応」に戻す</button>
-  </footer>
 </div>
 
 <script>
-// 【重要】ここにGASのWebアプリURL（デプロイURL）を記述してください
 const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbx-jPnyjqfcHuIPj8u-LsMG1urnmQmbN4WpPjtuny61--EpIgHJv_4BPKYrwsYEOWUUjw/exec";
-const POLL_MS = 6000;
-const EMPTY_ITEM = { status:"未対応", assignee:"", due:"", vendor:"", approval:"" };
-const STATUS_OPTIONS = ["未対応", "発注済", "完了"];
 
 let DATA = [];
-let state = {};
+let STATE = {};
+let DETAILS = {};
+let isEditMode = false;
+let currentKey = "";
 
 async function init() {
-  await fetchFromServer();
-  setInterval(fetchFromServer, POLL_MS);
+  await fetchData();
 }
 
-async function fetchFromServer() {
+async function fetchData() {
   try {
     const res = await fetch(WEBAPP_URL + "?action=get");
     const json = await res.json();
+    if (json.tasks) DATA = json.tasks;
+    if (json.state) STATE = json.state;
+    if (json.details) DETAILS = json.details;
     
-    if (json.items) state = json.items;
-    if (json.tasks && json.tasks.length > 0) DATA = json.tasks;
-    
-    document.getElementById("modeStatus").textContent = "● 自動同期ON";
-    document.getElementById("modeStatus").style.color = "var(--done)";
     document.getElementById("loader").style.display = "none";
     renderView();
-  } catch (err) {
-    document.getElementById("modeStatus").textContent = "○ オフライン (再接続中...)";
-    document.getElementById("modeStatus").style.color = "var(--danger)";
+  } catch (e) {
+    document.getElementById("syncStatus").textContent = "○ オフライン";
+    document.getElementById("syncStatus").style.color = "var(--danger)";
   }
 }
 
-function itemOf(key) { return state[key] || { ...EMPTY_ITEM }; }
-
-async function updateField(key, field, value) {
-  if (!state[key]) state[key] = { ...EMPTY_ITEM };
-  state[key][field] = value;
-  renderView();
-
-  try {
-    const url = `${WEBAPP_URL}?action=update&key=${encodeURIComponent(key)}&field=${field}&value=${encodeURIComponent(value)}`;
-    await fetch(url, { method: "GET", mode: "no-cors" });
-  } catch(e) {}
-}
-
+// ---------------------------------
+// ビューモード描画
+// ---------------------------------
 function renderView() {
-  const root = document.getElementById("categories");
+  const root = document.getElementById("viewMode");
   root.innerHTML = "";
-  let total = 0, doneCount = 0, apprTotal = 0, apprDone = 0;
 
   DATA.forEach(cat => {
-    const catDone = cat.items.filter(it => itemOf(cat.id + ":" + it.t).status === "完了").length;
-    total += cat.items.length; doneCount += catDone;
-
     const el = document.createElement("div");
-    el.className = "cat open";
-
-    const header = document.createElement("div");
-    header.className = "cat-header";
-    header.innerHTML = `<div class="cat-title">${cat.title} <span class="cat-badge">${catDone} / ${cat.items.length}</span></div><div class="cat-icon">▼</div>`;
-    header.addEventListener("click", () => el.classList.toggle("open"));
-    el.appendChild(header);
-
-    const itemsWrap = document.createElement("div");
-    itemsWrap.className = "items";
+    el.className = "cat";
+    el.innerHTML = `<div class="cat-header">${cat.title}</div>`;
 
     cat.items.forEach(it => {
       const key = cat.id + ":" + it.t;
-      const rec = itemOf(key);
-      apprTotal++;
-      if (rec.approval === "承認済み") apprDone++;
+      const st = STATE[key] || { status:"未対応", assignee:"", due:"" };
+      const det = DETAILS[key] || { memo:"", options:[] };
+      
+      let badgeClass = "badge";
+      if(st.status === "発注済") badgeClass += " st-発注済";
+      if(st.status === "完了") badgeClass += " st-完了";
+      
+      const hasCompare = det.options && det.options.length > 0 ? "📊 比較あり" : "";
 
       const row = document.createElement("div");
-      row.className = "item" + (rec.status === "完了" ? " complete" : "");
-
-      const top = document.createElement("div");
-      top.className = "item-top";
-      let stClass = rec.status === "発注済" ? "st-ordered" : rec.status === "完了" ? "st-done" : "";
-
-      top.innerHTML = `
-        <span class="item-text">${it.t}</span>
-        <select class="f-status ${stClass}">
-          ${STATUS_OPTIONS.map(s => `<option value="${s}" ${rec.status === s ? "selected" : ""}>${s}</option>`).join("")}
-        </select>
-      `;
-      top.querySelector(".f-status").addEventListener("change", (e) => updateField(key, "status", e.target.value));
-      row.appendChild(top);
-
-      const fields = document.createElement("div");
-      fields.className = "fields";
-      fields.innerHTML = `
-        <div class="field"><span class="field-label">担当者</span><input type="text" class="f-assignee" value="${rec.assignee}" placeholder="未定"></div>
-        <div class="field"><span class="field-label">納期</span><input type="date" class="f-due" value="${rec.due}"></div>
-        <div class="field"><span class="field-label">発注先</span><input type="text" class="f-vendor" value="${rec.vendor}" placeholder="未定"></div>
-        <div class="field"><span class="field-label">承認状況</span>
-          <select class="f-approval">
-            <option value="" ${rec.approval===""?"selected":""}>-</option>
-            <option value="申請中" ${rec.approval==="申請中"?"selected":""}>申請中</option>
-            <option value="承認済み" ${rec.approval==="承認済み"?"selected":""}>承認済み</option>
-          </select>
+      row.className = "item";
+      row.innerHTML = `
+        <div class="item-info">
+          <div class="item-title">${it.t}</div>
+          <div class="item-meta">
+            <span>担当: ${st.assignee || "未定"}</span>
+            <span>納期: ${st.due || "未定"}</span>
+            <span style="color:var(--accent);">${hasCompare}</span>
+          </div>
         </div>
+        <div class="${badgeClass}">${st.status}</div>
       `;
-      fields.querySelector(".f-assignee").addEventListener("change", (e) => updateField(key, "assignee", e.target.value));
-      fields.querySelector(".f-due").addEventListener("change", (e) => updateField(key, "due", e.target.value));
-      fields.querySelector(".f-vendor").addEventListener("change", (e) => updateField(key, "vendor", e.target.value));
-      fields.querySelector(".f-approval").addEventListener("change", (e) => updateField(key, "approval", e.target.value));
-      row.appendChild(fields);
-      itemsWrap.appendChild(row);
+      row.onclick = () => openModal(cat.id, it.t);
+      el.appendChild(row);
     });
-    el.appendChild(itemsWrap);
     root.appendChild(el);
   });
-
-  const pct = total ? Math.round((doneCount / total) * 100) : 0;
-  document.getElementById("pctNum").textContent = pct + "%";
-  document.getElementById("pctSub").textContent = `完了 ${doneCount} / ${total}`;
-  document.getElementById("apprSub").textContent = `承認済み ${apprDone} / ${apprTotal}`;
-  document.getElementById("barFill").style.width = pct + "%";
-  document.getElementById("ringFill").style.strokeDashoffset = 188.5 - (188.5 * pct / 100);
 }
 
-document.getElementById("resetBtn").addEventListener("click", async () => {
-  if (!confirm("すべてのステータスを「未対応」に戻しますか？")) return;
-  const keys = Object.keys(state);
-  for (const k of keys) { 
-    try { await fetch(`${WEBAPP_URL}?action=update&key=${encodeURIComponent(k)}&field=status&value=未対応`, { method: "GET", mode: "no-cors" }); } catch(e) {} 
+// ---------------------------------
+// モーダル (詳細パネル) 処理
+// ---------------------------------
+let modalOptions = []; // 比較表の一時データ
+
+function openModal(catId, taskName) {
+  currentKey = catId + ":" + taskName;
+  const st = STATE[currentKey] || { status:"未対応", assignee:"", due:"", vendor:"", approval:"" };
+  const det = DETAILS[currentKey] || { memo:"", options:[] };
+  
+  document.getElementById("mTitle").textContent = taskName;
+  document.getElementById("mStatus").value = st.status;
+  document.getElementById("mAssignee").value = st.assignee;
+  document.getElementById("mDue").value = st.due;
+  document.getElementById("mVendor").value = st.vendor;
+  document.getElementById("mApproval").value = st.approval;
+  document.getElementById("mMemo").value = det.memo;
+  
+  // 比較表の展開
+  modalOptions = JSON.parse(JSON.stringify(det.options || []));
+  renderCompareTable();
+  
+  document.getElementById("taskModal").style.display = "flex";
+}
+
+function closeModal() {
+  document.getElementById("taskModal").style.display = "none";
+}
+
+function renderCompareTable() {
+  const tbody = document.getElementById("mCompareBody");
+  tbody.innerHTML = "";
+  if(modalOptions.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#ccc; padding:16px;">「＋ 候補を追加」から比較表を作成できます</td></tr>`;
+    return;
   }
-  fetchFromServer();
-});
+  
+  modalOptions.forEach((opt, idx) => {
+    tbody.innerHTML += `
+      <tr>
+        <td><input type="text" value="${opt.name}" onchange="updateOpt(${idx}, 'name', this.value)" placeholder="A案"></td>
+        <td><textarea onchange="updateOpt(${idx}, 'product', this.value)" placeholder="メーカー名">${opt.product}</textarea></td>
+        <td><textarea onchange="updateOpt(${idx}, 'cost', this.value)" placeholder="費用">${opt.cost}</textarea></td>
+        <td><textarea onchange="updateOpt(${idx}, 'merit', this.value)" placeholder="メリット">${opt.merit}</textarea></td>
+        <td><textarea onchange="updateOpt(${idx}, 'demerit', this.value)" placeholder="懸念点">${opt.demerit}</textarea></td>
+      </tr>
+    `;
+  });
+}
+
+function addCompareRow() {
+  const nextName = String.fromCharCode(65 + modalOptions.length) + "案";
+  modalOptions.push({ name: nextName, product: "", cost: "", merit: "", demerit: "" });
+  renderCompareTable();
+}
+function updateOpt(idx, field, val) { modalOptions[idx][field] = val; }
+
+async function saveModal() {
+  const btn = document.getElementById("mSaveBtn");
+  btn.textContent = "保存中...";
+  
+  // 入力値の回収
+  const stData = {
+    status: document.getElementById("mStatus").value,
+    assignee: document.getElementById("mAssignee").value,
+    due: document.getElementById("mDue").value,
+    vendor: document.getElementById("mVendor").value,
+    approval: document.getElementById("mApproval").value
+  };
+  
+  // 空の比較行は削除して保存
+  const cleanOptions = modalOptions.filter(o => o.product.trim() || o.cost.trim() || o.merit.trim() || o.demerit.trim());
+  const detData = {
+    memo: document.getElementById("mMemo").value,
+    options: cleanOptions
+  };
+
+  // ローカル更新
+  STATE[currentKey] = stData;
+  DETAILS[currentKey] = detData;
+  renderView();
+
+  // サーバーへ送信
+  try {
+    const formData = new URLSearchParams();
+    formData.append("action", "update_item");
+    formData.append("key", currentKey);
+    formData.append("state", JSON.stringify(stData));
+    formData.append("details", JSON.stringify(detData));
+    await fetch(WEBAPP_URL, { method: "POST", body: formData });
+  } catch(e) { alert("保存に失敗しました"); }
+  
+  btn.textContent = "保存して閉じる";
+  closeModal();
+}
+
+// ---------------------------------
+// リスト構成 編集モード
+// ---------------------------------
+let editData = [];
+function toggleEditMode() {
+  isEditMode = !isEditMode;
+  if(isEditMode) {
+    editData = JSON.parse(JSON.stringify(DATA));
+    document.getElementById("viewMode").style.display = "none";
+    document.getElementById("editMode").style.display = "block";
+    document.getElementById("toggleEditBtn").textContent = "編集キャンセル";
+    renderEditPanel();
+  } else {
+    document.getElementById("viewMode").style.display = "block";
+    document.getElementById("editMode").style.display = "none";
+    document.getElementById("toggleEditBtn").textContent = "構成を編集する";
+  }
+}
+
+function renderEditPanel() {
+  const panel = document.getElementById("editPanel");
+  panel.innerHTML = "";
+  editData.forEach((cat, cIdx) => {
+    let html = `<div class="edit-cat">
+      <div class="edit-row"><input type="text" value="${cat.title}" onchange="editData[${cIdx}].title = this.value" style="font-weight:bold;">
+      <button class="btn btn-danger" onclick="editData.splice(${cIdx}, 1); renderEditPanel();">削除</button></div>
+    `;
+    cat.items.forEach((task, tIdx) => {
+      html += `<div class="edit-row" style="padding-left:20px;">
+        <span style="color:#ccc;">・</span><input type="text" value="${task.t}" onchange="editData[${cIdx}].items[${tIdx}].t = this.value">
+        <button class="btn" style="color:var(--danger);" onclick="editData[${cIdx}].items.splice(${tIdx}, 1); renderEditPanel();">×</button>
+      </div>`;
+    });
+    html += `<button class="btn" style="margin-left:32px;" onclick="editData[${cIdx}].items.push({t:''}); renderEditPanel();">＋ タスク追加</button></div>`;
+    panel.innerHTML += html;
+  });
+}
+
+function addCategory() {
+  editData.push({ id: "cat_" + Date.now(), title: "新カテゴリ", items: [] });
+  renderEditPanel();
+}
+
+async function saveTasks() {
+  document.getElementById("toggleEditBtn").textContent = "保存中...";
+  // 空文字除外
+  DATA = editData.filter(c => c.title.trim()).map(c => ({
+    id: c.id, title: c.title, items: c.items.filter(i => i.t.trim())
+  }));
+  
+  try {
+    const formData = new URLSearchParams();
+    formData.append("action", "update_tasks");
+    formData.append("tasks", JSON.stringify(DATA));
+    await fetch(WEBAPP_URL, { method: "POST", body: formData });
+  } catch(e) {}
+  
+  toggleEditMode(); // ビューに戻る
+  renderView();
+}
 
 init();
 </script>
