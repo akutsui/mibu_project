@@ -5,20 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>新規開業準備 進捗管理</title>
 <style>
-/* 薄茶色ベースの色調に戻しました */
 :root {
   --bg: #f8f6f0;       /* 全体の背景色（薄茶色） */
-  --card: #ffffff;     /* カードの背景 */
-  --text: #333333;     /* テキスト色 */
-  --sub: #7a756b;      /* サブテキスト色 */
-  --line: #e8e3d8;     /* 境界線 */
-  --accent: #a39171;   /* アクセント（茶色系） */
-  --accent-hover: #8f7d5e;
-  --done: #6b8e23;     /* 完了テキスト（オリーブ系） */
-  --done-bg: #f0f4e6;  /* 完了背景 */
-  --warn: #c27a29;     /* 発注済テキスト */
-  --warn-bg: #fcf4e8;  /* 発注済背景 */
-  --danger: #dc3545;   /* 削除ボタン等 */
+  --card: #ffffff;
+  --text: #333333;
+  --sub: #7a756b;
+  --line: #e8e3d8;
+  --accent: #a39171;
+  --done: #6b8e23;
+  --done-bg: #f0f4e6;
+  --warn: #c27a29;
+  --warn-bg: #fcf4e8;
 }
 body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 16px; }
 .wrap { max-width: 800px; margin: 0 auto; }
@@ -37,15 +34,8 @@ p.lead { font-size: .85rem; color: var(--sub); margin: 0; }
 .bar-track { height: 6px; background: var(--line); border-radius: 99px; margin-top: 8px; overflow: hidden; }
 .bar-fill { height: 100%; background: var(--accent); width: 0%; transition: width .5s ease; }
 
-.controls { display: flex; justify-content: space-between; margin-bottom: 16px; align-items: center;}
-.btn { padding: 8px 16px; border-radius: 6px; border: 1px solid var(--line); background: var(--card); cursor: pointer; font-size: .85rem; transition: background .2s; color: var(--text); }
-.btn:hover { background: #fdfbf7; }
-.btn-primary { background: var(--accent); color: #fff; border: none; }
-.btn-primary:hover { background: var(--accent-hover); }
-.btn-danger { color: var(--danger); border-color: var(--danger); background: #fff;}
-.btn-danger:hover { background: #fef2f2; }
+.controls { margin-bottom: 16px; text-align: right; font-size: 0.85rem; color: var(--sub); }
 
-/* ビューモードのスタイル */
 .cat { background: var(--card); border-radius: 8px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); overflow: hidden; border: 1px solid var(--line); }
 .cat-header { display: flex; justify-content: space-between; align-items: center; padding: 16px; cursor: pointer; font-weight: 600; }
 .cat-title { display: flex; align-items: center; gap: 8px; flex-grow: 1;}
@@ -63,23 +53,11 @@ p.lead { font-size: .85rem; color: var(--sub); margin: 0; }
 .fields { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--line); }
 .field { display: flex; flex-direction: column; gap: 2px; }
 .field-label { font-size: .66rem; color: var(--sub); }
-.fields input, .fields select { font-family: inherit; font-size: .76rem; padding: 4px 6px; border: 1px solid var(--line); border-radius: 4px; background: var(--card); color: var(--text); }
+.fields input, .fields select { font-family: inherit; font-size: .76rem; padding: 4px 6px; border: 1px solid var(--line); border-radius: 4px; background: var(--bg); color: var(--text); }
 
-.f-status { font-family: inherit; font-size: .76rem; font-weight: 500; padding: 4px 9px; border-radius: 99px; border: 1px solid var(--line); background: var(--card); color: var(--sub); cursor: pointer; flex-shrink: 0; }
+.f-status { font-family: inherit; font-size: .76rem; font-weight: 500; padding: 4px 9px; border-radius: 99px; border: 1px solid var(--line); background: var(--bg); color: var(--sub); cursor: pointer; flex-shrink: 0; }
 .f-status.st-ordered { background: var(--warn-bg); color: var(--warn); border-color: var(--warn); }
 .f-status.st-done { background: var(--done-bg); color: var(--done); border-color: var(--done); }
-
-/* 管理画面（編集モード）のスタイル */
-#editMode { display: none; background: var(--card); border-radius: 8px; padding: 20px; border: 1px solid var(--line); }
-.edit-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid var(--line); }
-.edit-cat-box { background: #faf9f6; border: 1px solid var(--line); border-radius: 6px; padding: 16px; margin-bottom: 16px; }
-.edit-cat-header { display: flex; gap: 8px; margin-bottom: 12px; }
-.edit-cat-header input { flex-grow: 1; font-size: 1.05rem; font-weight: bold; padding: 8px; border: 1px solid var(--line); border-radius: 4px; }
-.edit-task-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; padding-left: 12px; }
-.edit-task-row input { flex-grow: 1; padding: 8px; border: 1px solid var(--line); border-radius: 4px; font-size: 0.9rem; }
-.btn-icon { background: none; border: none; color: var(--danger); font-size: 1.2rem; cursor: pointer; padding: 0 8px; line-height: 1; }
-.btn-icon:hover { opacity: 0.7; }
-.btn-small { padding: 4px 10px; font-size: 0.8rem; border-radius: 4px; }
 
 footer { margin-top: 32px; text-align: center; }
 .reset { font-size: .8rem; color: var(--sub); background: none; border: none; text-decoration: underline; cursor: pointer; }
@@ -90,265 +68,73 @@ footer { margin-top: 32px; text-align: center; }
 <div class="wrap">
   <header>
     <h1>新規開業準備 進捗管理</h1>
-    <p class="lead">ステータス・担当者・納期・発注先・承認状況をあわせて管理できます。</p>
+    <p class="lead">ステータス・担当者・納期・発注先・承認状況を管理できます。</p>
   </header>
 
-  <div class="controls">
-    <button id="modeBtn" class="btn">データ読み込み中...</button>
-    <button id="openEditBtn" class="btn btn-primary" onclick="enterEditMode()">リストを編集する</button>
-  </div>
+  <div class="controls" id="modeStatus">データ読み込み中...</div>
 
-  <!-- 通常のビュー画面 -->
-  <div id="viewMode">
-    <div class="progress-card">
-      <div class="progress-ring">
-        <svg width="64" height="64"><circle class="ring-bg" cx="32" cy="32" r="30"></circle><circle class="ring-fill" id="ringFill" cx="32" cy="32" r="30"></circle></svg>
-      </div>
-      <div class="progress-text">
-        <div class="progress-num" id="pctNum">0%</div>
-        <div class="progress-sub" id="pctSub">完了 0 / 0</div>
-        <div class="progress-sub" id="apprSub">承認済み 0 / 0</div>
-        <div class="bar-track"><div class="bar-fill" id="barFill" style="width:0%"></div></div>
-      </div>
+  <div class="progress-card">
+    <div class="progress-ring">
+      <svg width="64" height="64"><circle class="ring-bg" cx="32" cy="32" r="30"></circle><circle class="ring-fill" id="ringFill" cx="32" cy="32" r="30"></circle></svg>
     </div>
-
-    <div id="loader">データを読み込んでいます...</div>
-    <div id="categories"></div>
-
-    <footer>
-      <button class="reset" id="resetBtn">ステータスをすべて「未対応」に戻す</button>
-    </footer>
-  </div>
-
-  <!-- 専用の編集画面（管理モード） -->
-  <div id="editMode">
-    <div class="edit-header">
-      <h2 style="margin:0; font-size:1.2rem;">リストの管理</h2>
-      <div>
-        <button class="btn" onclick="cancelEditMode()">キャンセル</button>
-        <button class="btn btn-primary" onclick="saveEditMode()">保存して戻る</button>
-      </div>
+    <div class="progress-text">
+      <div class="progress-num" id="pctNum">0%</div>
+      <div class="progress-sub" id="pctSub">完了 0 / 0</div>
+      <div class="progress-sub" id="apprSub">承認済み 0 / 0</div>
+      <div class="bar-track"><div class="bar-fill" id="barFill" style="width:0%"></div></div>
     </div>
-    <div id="editContainer"></div>
-    <button class="btn" style="width:100%; padding:12px; margin-top:8px; border-style:dashed;" onclick="addCategoryUI()">＋ 新しいカテゴリを追加</button>
   </div>
 
+  <div id="loader">データを読み込んでいます...</div>
+  <div id="categories"></div>
+
+  <footer>
+    <button class="reset" id="resetBtn">ステータスをすべて「未対応」に戻す</button>
+  </footer>
 </div>
 
 <script>
-// 【重要】ここにGASのWebアプリURL（デプロイURL）を記述してください
-const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbx-jPnyjqfcHuIPj8u-LsMG1urnmQmbN4WpPjtuny61--EpIgHJv_4BPKYrwsYEOWUUjw/exec";
+const WEBAPP_URL = "ここにGASのWebアプリURLを貼り付けてください";
 const POLL_MS = 6000;
 const EMPTY_ITEM = { status:"未対応", assignee:"", due:"", vendor:"", approval:"" };
 const STATUS_OPTIONS = ["未対応", "発注済", "完了"];
-const STORAGE_KEY = "clinic-prep-progress-v5";
-const TASKS_KEY = "clinic-prep-tasks-v5";
 
 let DATA = [];
 let state = {};
-let mode = "local"; 
-let pollTimer = null;
-let editData = []; // 編集画面用の作業データ
 
-// 起動時の初期化
 async function init() {
-  const localState = localStorage.getItem(STORAGE_KEY);
-  if (localState) state = JSON.parse(localState);
-  
-  const localTasks = localStorage.getItem(TASKS_KEY);
-  if (localTasks) DATA = JSON.parse(localTasks);
-  
-  if (DATA.length > 0) {
-    document.getElementById("loader").style.display = "none";
-    renderView();
-  }
-
   await fetchFromServer();
-  
-  if (mode === "shared") {
-    pollTimer = setInterval(() => {
-      // 編集画面を開いている間は自動更新による再描画を防ぐ
-      if (document.getElementById("editMode").style.display !== "block") {
-        fetchFromServer();
-      }
-    }, POLL_MS);
-  }
+  setInterval(fetchFromServer, POLL_MS);
 }
 
-// サーバーからデータ取得
 async function fetchFromServer() {
   try {
     const res = await fetch(WEBAPP_URL + "?action=get");
     const json = await res.json();
     
-    if (json.items) {
-      state = json.items;
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    }
-    if (json.tasks && json.tasks.length > 0) {
-      DATA = json.tasks;
-      localStorage.setItem(TASKS_KEY, JSON.stringify(DATA));
-    }
+    if (json.items) state = json.items;
+    if (json.tasks && json.tasks.length > 0) DATA = json.tasks;
     
-    mode = "shared";
-    document.getElementById("modeBtn").textContent = "共有モード (自動同期ON)";
+    document.getElementById("modeStatus").textContent = "● 共有モード (自動同期ON)";
     document.getElementById("loader").style.display = "none";
-    
-    // ビューモードの時だけ画面を更新
-    if (document.getElementById("editMode").style.display !== "block") {
-      renderView();
-    }
+    renderView();
   } catch (err) {
-    mode = "local";
-    document.getElementById("modeBtn").textContent = "ローカルモード (オフライン)";
+    document.getElementById("modeStatus").textContent = "○ オフライン (再接続中...)";
   }
 }
 
-function itemOf(key) {
-  return state[key] || { ...EMPTY_ITEM };
-}
+function itemOf(key) { return state[key] || { ...EMPTY_ITEM }; }
 
-// 状態（進捗）の更新
 async function updateField(key, field, value) {
   if (!state[key]) state[key] = { ...EMPTY_ITEM };
   state[key][field] = value;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   renderView();
 
-  if (mode === "shared") {
-    try {
-      const url = `${WEBAPP_URL}?action=update&key=${encodeURIComponent(key)}&field=${field}&value=${encodeURIComponent(value)}`;
-      await fetch(url, { method: "GET", mode: "no-cors" });
-    } catch(e) {}
-  }
+  try {
+    const url = `${WEBAPP_URL}?action=update&key=${encodeURIComponent(key)}&field=${field}&value=${encodeURIComponent(value)}`;
+    await fetch(url, { method: "GET", mode: "no-cors" });
+  } catch(e) {}
 }
-
-// ==========================================
-// 編集モード（管理画面）の処理
-// ==========================================
-function enterEditMode() {
-  // 元のDATAをディープコピーし、タスク名変更時の引き継ぎ用に元の名前を保持する
-  editData = JSON.parse(JSON.stringify(DATA)).map(cat => {
-    cat.items = cat.items.map(it => {
-      it.originalT = it.t;
-      return it;
-    });
-    return cat;
-  });
-  
-  document.getElementById("viewMode").style.display = "none";
-  document.getElementById("openEditBtn").style.display = "none";
-  document.getElementById("editMode").style.display = "block";
-  renderEditScreen();
-}
-
-function cancelEditMode() {
-  if (confirm("変更を破棄して戻りますか？")) {
-    document.getElementById("editMode").style.display = "none";
-    document.getElementById("viewMode").style.display = "block";
-    document.getElementById("openEditBtn").style.display = "inline-block";
-    editData = [];
-  }
-}
-
-// 編集したデータを保存してサーバーへ送る
-async function saveEditMode() {
-  const newState = { ...state };
-  
-  // 空欄のカテゴリやタスクを除外＆名前変更に伴うステータスの引き継ぎ
-  const finalData = [];
-  editData.forEach(cat => {
-    if (!cat.title.trim()) return; // カテゴリ名が空ならスキップ
-    
-    const newItems = [];
-    cat.items.forEach(it => {
-      const newTitle = it.t.trim();
-      if (!newTitle) return; // タスク名が空ならスキップ
-      
-      // タスク名が変更された場合、古いキーの進捗状態を新しいキーへ移行
-      if (it.originalT && newTitle !== it.originalT) {
-        const oldKey = cat.id + ":" + it.originalT;
-        const newKey = cat.id + ":" + newTitle;
-        if (newState[oldKey]) {
-          newState[newKey] = newState[oldKey];
-          delete newState[oldKey]; // 古いデータを削除
-        }
-      }
-      newItems.push({ t: newTitle });
-    });
-    finalData.push({ id: cat.id, title: cat.title.trim(), items: newItems });
-  });
-
-  state = newState;
-  DATA = finalData;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  localStorage.setItem(TASKS_KEY, JSON.stringify(DATA));
-  
-  // サーバーへ送信
-  if (mode === "shared") {
-    document.getElementById("openEditBtn").textContent = "保存中...";
-    try {
-      const formData = new URLSearchParams();
-      formData.append("action", "update_tasks");
-      formData.append("tasks", JSON.stringify(DATA));
-      await fetch(WEBAPP_URL, { method: "POST", body: formData, headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
-    } catch(e) {
-      console.error(e);
-    }
-    document.getElementById("openEditBtn").textContent = "リストを編集する";
-  }
-
-  // 画面を戻す
-  document.getElementById("editMode").style.display = "none";
-  document.getElementById("viewMode").style.display = "block";
-  document.getElementById("openEditBtn").style.display = "inline-block";
-  renderView();
-}
-
-// 編集画面の描画
-function renderEditScreen() {
-  const container = document.getElementById("editContainer");
-  container.innerHTML = "";
-  
-  editData.forEach((cat, cIdx) => {
-    const catDiv = document.createElement("div");
-    catDiv.className = "edit-cat-box";
-    
-    let tasksHtml = "";
-    cat.items.forEach((task, tIdx) => {
-      tasksHtml += `
-        <div class="edit-task-row">
-          <span style="color:var(--line); font-size:1.5rem; line-height:0;">・</span>
-          <input type="text" value="${task.t}" onchange="updateEditTask(${cIdx}, ${tIdx}, this.value)" placeholder="タスク名を入力">
-          <button class="btn-icon" onclick="removeEditTask(${cIdx}, ${tIdx})" title="タスク削除">×</button>
-        </div>
-      `;
-    });
-
-    catDiv.innerHTML = `
-      <div class="edit-cat-header">
-        <input type="text" value="${cat.title}" onchange="updateEditCat(${cIdx}, this.value)" placeholder="カテゴリ名を入力">
-        <button class="btn btn-danger btn-small" onclick="removeEditCat(${cIdx})">カテゴリ削除</button>
-      </div>
-      <div id="edit_tasks_${cIdx}">${tasksHtml}</div>
-      <button class="btn btn-small" style="margin-left:22px; margin-top:4px;" onclick="addEditTask(${cIdx})">＋ タスクを追加</button>
-    `;
-    container.appendChild(catDiv);
-  });
-}
-
-// 編集画面用のデータ操作関数
-function updateEditCat(cIdx, val) { editData[cIdx].title = val; }
-function removeEditCat(cIdx) { if(confirm("このカテゴリと中のタスクを削除しますか？")) { editData.splice(cIdx, 1); renderEditScreen(); } }
-function addCategoryUI() { editData.push({ id: "cat_" + Date.now(), title: "", items: [] }); renderEditScreen(); }
-function updateEditTask(cIdx, tIdx, val) { editData[cIdx].items[tIdx].t = val; }
-function removeEditTask(cIdx, tIdx) { editData[cIdx].items.splice(tIdx, 1); renderEditScreen(); }
-function addEditTask(cIdx) { editData[cIdx].items.push({ t: "", originalT: "" }); renderEditScreen(); }
-
-// ==========================================
-// 通常ビューの描画処理
-// ==========================================
-function toggleCat(el) { el.classList.toggle("open"); }
 
 function renderView() {
   const root = document.getElementById("categories");
@@ -357,19 +143,15 @@ function renderView() {
 
   DATA.forEach(cat => {
     const catDone = cat.items.filter(it => itemOf(cat.id + ":" + it.t).status === "完了").length;
-    total += cat.items.length; 
-    doneCount += catDone;
+    total += cat.items.length; doneCount += catDone;
 
     const el = document.createElement("div");
     el.className = "cat open";
 
     const header = document.createElement("div");
     header.className = "cat-header";
-    header.innerHTML = `
-      <div class="cat-title">${cat.title} <span class="cat-badge">${catDone} / ${cat.items.length}</span></div>
-      <div class="cat-icon">▼</div>
-    `;
-    header.addEventListener("click", () => toggleCat(el));
+    header.innerHTML = `<div class="cat-title">${cat.title} <span class="cat-badge">${catDone} / ${cat.items.length}</span></div><div class="cat-icon">▼</div>`;
+    header.addEventListener("click", () => el.classList.toggle("open"));
     el.appendChild(header);
 
     const itemsWrap = document.createElement("div");
@@ -386,10 +168,7 @@ function renderView() {
 
       const top = document.createElement("div");
       top.className = "item-top";
-      
-      let stClass = "";
-      if(rec.status === "発注済") stClass = "st-ordered";
-      if(rec.status === "完了") stClass = "st-done";
+      let stClass = rec.status === "発注済" ? "st-ordered" : rec.status === "完了" ? "st-done" : "";
 
       top.innerHTML = `
         <span class="item-text">${it.t}</span>
@@ -419,39 +198,27 @@ function renderView() {
       fields.querySelector(".f-vendor").addEventListener("change", (e) => updateField(key, "vendor", e.target.value));
       fields.querySelector(".f-approval").addEventListener("change", (e) => updateField(key, "approval", e.target.value));
       row.appendChild(fields);
-      
       itemsWrap.appendChild(row);
     });
-
     el.appendChild(itemsWrap);
     root.appendChild(el);
   });
 
-  // 進捗バーの更新
   const pct = total ? Math.round((doneCount / total) * 100) : 0;
   document.getElementById("pctNum").textContent = pct + "%";
   document.getElementById("pctSub").textContent = `完了 ${doneCount} / ${total}`;
   document.getElementById("apprSub").textContent = `承認済み ${apprDone} / ${apprTotal}`;
   document.getElementById("barFill").style.width = pct + "%";
-  const circumference = 188.5;
-  document.getElementById("ringFill").style.strokeDashoffset = circumference - (circumference * pct / 100);
+  document.getElementById("ringFill").style.strokeDashoffset = 188.5 - (188.5 * pct / 100);
 }
 
 document.getElementById("resetBtn").addEventListener("click", async () => {
-  if (!confirm("すべてのステータスを「未対応」に戻しますか？（担当者等は残ります）")) return;
+  if (!confirm("すべてのステータスを「未対応」に戻しますか？")) return;
   const keys = Object.keys(state);
-  for (const k of keys) { state[k] = { ...itemOf(k), status: "未対応" }; }
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  
-  if (mode === "shared") {
-    for (const k of keys) { 
-      try { 
-        const url = `${WEBAPP_URL}?action=update&key=${encodeURIComponent(k)}&field=status&value=未対応`;
-        await fetch(url, { method: "GET", mode: "no-cors" });
-      } catch(e) {} 
-    }
+  for (const k of keys) { 
+    try { await fetch(`${WEBAPP_URL}?action=update&key=${encodeURIComponent(k)}&field=status&value=未対応`, { method: "GET", mode: "no-cors" }); } catch(e) {} 
   }
-  renderView();
+  fetchFromServer();
 });
 
 init();
