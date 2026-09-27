@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>機器・備品 選定ボード</title>
+<style>
+:root {
+  --bg: #f8f6f0; 
+  --card: #ffffff;
+  --text: #333333;
+  --sub: #7a756b;
+  --line: #e8e3d8;
+  --accent: #a39171;
+  --accent-hover: #8f7d5e;
+  --danger: #dc3545;
+  --done: #6b8e23;
+}
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
+.container { max-width: 900px; margin: 0 auto; }
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+h1 { font-size: 1.5rem; margin: 0; color: #222; }
+
+.btn { padding: 8px 16px; border-radius: 6px; border: 1px solid var(--line); background: var(--card); cursor: pointer; font-size: .9rem; text-decoration: none; color: var(--text); display: inline-block; }
+.btn:hover { background: #fdfbf7; }
+.btn-primary { background: var(--accent); color: #fff; border: none; font-weight: bold; }
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-small { padding: 4px 10px; font-size: 0.8rem; border-radius: 4px; }
+.btn-danger { color: var(--danger); border-color: var(--danger); background: #fff;}
+
+.eq-card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; margin-bottom: 24px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.03); }
+.eq-header { display: flex; gap: 12px; margin-bottom: 16px; align-items: center; }
+.eq-header input.title { flex-grow: 1; font-size: 1.2rem; font-weight: bold; padding: 8px; border: 1px solid var(--line); border-radius: 4px; }
+.eq-header select { padding: 8px; border: 1px solid var(--line); border-radius: 4px; font-size: 0.9rem; font-weight:bold; }
+.st-decided { background: #f0f4e6; color: var(--done); border-color: var(--done) !important; }
+
+.section-title { font-size: 0.85rem; color: var(--sub); margin: 16px 0 8px; font-weight: bold; }
+textarea.req-box { width: 100%; box-sizing: border-box; padding: 12px; border: 1px solid var(--line); border-radius: 4px; font-size: 0.9rem; resize: vertical; min-height: 60px; font-family: inherit; }
+
+/* 比較表のデザイン */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 0.85rem; }
+th, td { border: 1px solid var(--line); padding: 8px; text-align: left; vertical-align: top; }
+th { background: #faf9f6; color: var(--sub); white-space: nowrap; }
+td input, td textarea { width: 100%; box-sizing: border-box; border: 1px solid transparent; padding: 4px; font-size: 0.85rem; font-family: inherit; background: transparent; }
+td input:focus, td textarea:focus { border-color: var(--accent); background: #fff; outline: none; }
+td textarea { resize: vertical; min-height: 40px; }
+.col-action { width: 40px; text-align: center; vertical-align: middle; }
+
+#loader { text-align: center; color: var(--sub); padding: 40px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>📝 機器・備品 選定ボード</h1>
+    <div style="display: flex; gap: 8px;">
+      <a href="index.html" class="btn">🔙 進捗管理に戻る</a>
+      <button class="btn btn-primary" id="saveBtn" onclick="saveToServer()">変更をサーバーに保存</button>
+    </div>
+  </div>
+  
+  <p style="font-size: 0.85rem; color: var(--sub); margin-top: -16px; margin-bottom: 24px;">要件定義と比較表を作成し、どれを導入するか協議・記録するためのページです。</p>
+
+  <div id="loader">データを読み込んでいます...</div>
+  <div id="eqPanel"></div>
+  
+  <button class="btn" style="width:100%; padding:12px; border-style:dashed;" onclick="addEqItem()">＋ 新しい検討項目（機器・システム）を追加</button>
+</div>
+
+<script>
+// 【重要】ここにGASのWebアプリURL（新しいデプロイURL）を記述してください
+const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbx-jPnyjqfcHuIPj8u-LsMG1urnmQmbN4WpPjtuny61--EpIgHJv_4BPKYrwsYEOWUUjw/exec";
+let eqData = [];
+
+async function init() {
+  try {
+    const res = await fetch(WEBAPP_URL + "?action=get");
+    const json = await res.json();
+    if (json.equipment) {
+      eqData = json.equipment;
+    }
+    document.getElementById("loader").style.display = "none";
+    renderBoard();
+  } catch (e) {
+    document.getElementById("loader").textContent = "通信エラーが発生しました。";
+  }
+}
+
+function renderBoard() {
+  const panel = document.getElementById("eqPanel");
+  panel.innerHTML = "";
+  
+  eqData.forEach((eq, eIdx) => {
+    const card = document.createElement("div");
+    card.className = "eq-card";
+    
+    let stClass = eq.status === "決定" ? "st-decided" : "";
+    
+    // 比較表の行（A案、B案など）を生成
+    let rowsHtml = "";
+    eq.options.forEach((opt, oIdx) => {
+      rowsHtml += `
+        <tr>
+          <td style="font-weight:bold;">
+            <input type="text" value="${opt.name}" placeholder="A案" onchange="updateOpt(${eIdx}, ${oIdx}, 'name', this.value)">
+          </td>
+          <td>
+            <textarea placeholder="メーカー / 製品名" onchange="updateOpt(${eIdx}, ${oIdx}, 'product', this.value)">${opt.product}</textarea>
+          </td>
+          <td>
+            <textarea placeholder="初期費用・月額など" onchange="updateOpt(${eIdx}, ${oIdx}, 'cost', this.value)">${opt.cost}</textarea>
+          </td>
+          <td>
+            <textarea placeholder="優れている点" onchange="updateOpt(${eIdx}, ${oIdx}, 'merit', this.value)">${opt.merit}</textarea>
+          </td>
+          <td>
+            <textarea placeholder="懸念点・不足機能" onchange="updateOpt(${eIdx}, ${oIdx}, 'demerit', this.value)">${opt.demerit}</textarea>
+          </td>
+          <td class="col-action">
+            <button class="btn btn-small btn-danger" onclick="removeOption(${eIdx}, ${oIdx})" title="削除">×</button>
+          </td>
+        </tr>
+      `;
+    });
+
+    card.innerHTML = `
+      <div class="eq-header">
+        <input type="text" class="title" value="${eq.title}" placeholder="例: 電子カルテの選定" onchange="updateEq(${eIdx}, 'title', this.value)">
+        <select class="${stClass}" onchange="updateEq(${eIdx}, 'status', this.value)">
+          <option value="検討中" ${eq.status==='検討中'?'selected':''}>検討中</option>
+          <option value="候補絞り込み" ${eq.status==='候補絞り込み'?'selected':''}>候補絞り込み</option>
+          <option value="決定" ${eq.status==='決定'?'selected':''}>決定 (発注へ)</option>
+        </select>
+        <button class="btn btn-danger" onclick="removeEqItem(${eIdx})">削除</button>
+      </div>
+
+      <div class="section-title">■ 必須要件・メモ（URL等）</div>
+      <textarea class="req-box" placeholder="例: Mac対応必須、予算は初期100万以内、予約システムとの連携が必要..." onchange="updateEq(${eIdx}, 'req', this.value)">${eq.req || ''}</textarea>
+
+      <div class="section-title">■ 比較マトリクス</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 10%;">候補</th>
+              <th style="width: 20%;">製品名・リンク</th>
+              <th style="width: 20%;">費用感</th>
+              <th style="width: 22%;">メリット (◯)</th>
+              <th style="width: 22%;">懸念点 (△)</th>
+              <th style="width: 6%;"></th>
+            </tr>
+          </thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+      </div>
+      <button class="btn btn-small" onclick="addOption(${eIdx})">＋ 候補を追加 (B案, C案...)</button>
+    `;
+    panel.appendChild(card);
+  });
+}
+
+// データ操作関数
+function addEqItem() {
+  eqData.push({ title: "", status: "検討中", req: "", options: [ { name: "A案", product: "", cost: "", merit: "", demerit: "" } ] });
+  renderBoard();
+}
+function removeEqItem(eIdx) {
+  if (confirm("この検討項目を丸ごと削除しますか？")) { eqData.splice(eIdx, 1); renderBoard(); }
+}
+function updateEq(eIdx, field, val) {
+  eqData[eIdx][field] = val;
+  if (field === 'status') renderBoard(); // ステータス色反映のため再描画
+}
+function addOption(eIdx) {
+  const nextName = String.fromCharCode(65 + eqData[eIdx].options.length) + "案"; // A, B, C...と自動付与
+  eqData[eIdx].options.push({ name: nextName, product: "", cost: "", merit: "", demerit: "" });
+  renderBoard();
+}
+function removeOption(eIdx, oIdx) {
+  if (confirm("この候補を削除しますか？")) { eqData[eIdx].options.splice(oIdx, 1); renderBoard(); }
+}
+function updateOpt(eIdx, oIdx, field, val) {
+  eqData[eIdx].options[oIdx][field] = val;
+}
+
+// サーバーへ保存
+async function saveToServer() {
+  const btn = document.getElementById("saveBtn");
+  btn.textContent = "保存中...";
+  btn.disabled = true;
+
+  try {
+    const formData = new URLSearchParams();
+    formData.append("action", "update_equipment");
+    formData.append("equipment", JSON.stringify(eqData));
+    await fetch(WEBAPP_URL, { method: "POST", body: formData, headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
+    
+    alert("検討内容を保存しました！");
+  } catch(e) {
+    alert("保存に失敗しました。");
+  } finally {
+    btn.textContent = "変更をサーバーに保存";
+    btn.disabled = false;
+  }
+}
+
+init();
+</script>
+</body>
+</html>
