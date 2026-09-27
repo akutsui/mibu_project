@@ -34,7 +34,12 @@ p.lead { font-size: .85rem; color: var(--sub); margin: 0; }
 .bar-track { height: 6px; background: var(--line); border-radius: 99px; margin-top: 8px; overflow: hidden; }
 .bar-fill { height: 100%; background: var(--accent); width: 0%; transition: width .5s ease; }
 
-.controls { margin-bottom: 16px; text-align: right; font-size: 0.85rem; color: var(--sub); }
+.controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.status-text { font-size: 0.85rem; color: var(--sub); }
+.btn { padding: 8px 16px; border-radius: 6px; border: 1px solid var(--line); background: var(--card); cursor: pointer; font-size: .85rem; transition: background .2s; color: var(--text); text-decoration: none; display: inline-block; }
+.btn:hover { background: #fdfbf7; }
+.btn-primary { background: var(--accent); color: #fff; border: none; font-weight: bold; }
+.btn-primary:hover { background: #8f7d5e; }
 
 .cat { background: var(--card); border-radius: 8px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); overflow: hidden; border: 1px solid var(--line); }
 .cat-header { display: flex; justify-content: space-between; align-items: center; padding: 16px; cursor: pointer; font-weight: 600; }
@@ -71,7 +76,11 @@ footer { margin-top: 32px; text-align: center; }
     <p class="lead">ステータス・担当者・納期・発注先・承認状況を管理できます。</p>
   </header>
 
-  <div class="controls" id="modeStatus">データ読み込み中...</div>
+  <div class="controls">
+    <span class="status-text" id="modeStatus">データ読み込み中...</span>
+    <!-- 管理画面へのリンクボタン（admin.html と同じフォルダにある想定） -->
+    <a href="admin.html" class="btn btn-primary">⚙️ 管理画面を開く</a>
+  </div>
 
   <div class="progress-card">
     <div class="progress-ring">
@@ -88,16 +97,14 @@ footer { margin-top: 32px; text-align: center; }
   <div id="loader">データを読み込んでいます...</div>
   <div id="categories"></div>
 
-　<footer>
+  <footer>
     <button class="reset" id="resetBtn">ステータスをすべて「未対応」に戻す</button>
-    <br><br>
-    <!-- 管理画面へのリンクを小さく追加 -->
-    <a href="admin.html" style="font-size: 0.75rem; color: #a39171; text-decoration: none;">⚙️ リスト構成を管理する</a>
   </footer>
 </div>
 
 <script>
-const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbx-jPnyjqfcHuIPj8u-LsMG1urnmQmbN4WpPjtuny61--EpIgHJv_4BPKYrwsYEOWUUjw/exec";
+// 【重要】ここにGASのWebアプリURL（デプロイURL）を記述してください
+const WEBAPP_URL = "ここにGASのWebアプリURLを貼り付けてください";
 const POLL_MS = 6000;
 const EMPTY_ITEM = { status:"未対応", assignee:"", due:"", vendor:"", approval:"" };
 const STATUS_OPTIONS = ["未対応", "発注済", "完了"];
@@ -118,11 +125,13 @@ async function fetchFromServer() {
     if (json.items) state = json.items;
     if (json.tasks && json.tasks.length > 0) DATA = json.tasks;
     
-    document.getElementById("modeStatus").textContent = "● 共有モード (自動同期ON)";
+    document.getElementById("modeStatus").textContent = "● 自動同期ON";
+    document.getElementById("modeStatus").style.color = "var(--done)";
     document.getElementById("loader").style.display = "none";
     renderView();
   } catch (err) {
     document.getElementById("modeStatus").textContent = "○ オフライン (再接続中...)";
+    document.getElementById("modeStatus").style.color = "var(--danger)";
   }
 }
 
