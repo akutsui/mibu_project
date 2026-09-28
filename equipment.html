@@ -3,379 +3,206 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>新規開業準備 進捗管理ツール</title>
+<title>機器・備品 選定ボード</title>
 <style>
 :root {
-  --bg: #f8f6f0; --card: #ffffff; --text: #333333; --sub: #7a756b; --line: #e8e3d8; 
-  --accent: #a39171; --done: #6b8e23; --warn: #c27a29; --danger: #dc3545;
+  --bg: #f8f6f0; 
+  --card: #ffffff;
+  --text: #333333;
+  --sub: #7a756b;
+  --line: #e8e3d8;
+  --accent: #a39171;
+  --accent-hover: #8f7d5e;
+  --danger: #dc3545;
+  --done: #6b8e23;
 }
-body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 16px; }
-.wrap { max-width: 900px; margin: 0 auto; }
-header { text-align: center; margin-bottom: 24px; }
-h1 { font-size: 1.5rem; margin: 0 0 8px; }
-.controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 2px solid var(--line); padding-bottom: 12px;}
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
+.container { max-width: 900px; margin: 0 auto; }
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+h1 { font-size: 1.5rem; margin: 0; color: #222; }
 
-.btn { padding: 6px 14px; border-radius: 6px; border: 1px solid var(--line); background: var(--card); cursor: pointer; font-size: .85rem; color: var(--text); }
+.btn { padding: 8px 16px; border-radius: 6px; border: 1px solid var(--line); background: var(--card); cursor: pointer; font-size: .9rem; text-decoration: none; color: var(--text); display: inline-block; }
+.btn:hover { background: #fdfbf7; }
 .btn-primary { background: var(--accent); color: #fff; border: none; font-weight: bold; }
-.btn-danger { color: var(--danger); border-color: var(--danger); }
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-small { padding: 4px 10px; font-size: 0.8rem; border-radius: 4px; }
+.btn-danger { color: var(--danger); border-color: var(--danger); background: #fff;}
 
-/* リストビュー */
-.cat { background: var(--card); border-radius: 8px; margin-bottom: 12px; border: 1px solid var(--line); overflow: hidden; }
-.cat-header { display: flex; justify-content: space-between; padding: 16px; font-weight: bold; background: #faf9f6; cursor: pointer; }
-.item { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-top: 1px solid var(--line); cursor: pointer; transition: background 0.2s; }
-.item:hover { background: #fdfbf7; }
-.item-info { flex-grow: 1; display: flex; flex-direction: column; gap: 4px; }
-.item-title { font-size: 0.95rem; }
-.item-meta { font-size: 0.75rem; color: var(--sub); display: flex; gap: 12px; }
-.badge { padding: 4px 8px; border-radius: 99px; font-size: 0.75rem; font-weight: bold; border: 1px solid var(--line); }
-.badge.st-完了 { background: #f0f4e6; color: var(--done); border-color: var(--done); }
-.badge.st-発注済 { background: #fcf4e8; color: var(--warn); border-color: var(--warn); }
+.eq-card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; margin-bottom: 24px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.03); }
+.eq-header { display: flex; gap: 12px; margin-bottom: 16px; align-items: center; }
+.eq-header input.title { flex-grow: 1; font-size: 1.2rem; font-weight: bold; padding: 8px; border: 1px solid var(--line); border-radius: 4px; }
+.eq-header select { padding: 8px; border: 1px solid var(--line); border-radius: 4px; font-size: 0.9rem; font-weight:bold; }
+.st-decided { background: #f0f4e6; color: var(--done); border-color: var(--done) !important; }
 
-/* モーダル (詳細パネル) */
-.modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; }
-.modal-content { background: #fff; width: 95%; max-width: 800px; max-height: 90vh; overflow-y: auto; border-radius: 8px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--line); padding-bottom: 12px; }
-.modal-title { font-size: 1.2rem; font-weight: bold; }
-.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px; }
-.field-group { display: flex; flex-direction: column; gap: 4px; }
-.field-group label { font-size: 0.75rem; color: var(--sub); }
-.field-group input, .field-group select, .field-group textarea { padding: 8px; border: 1px solid var(--line); border-radius: 4px; font-family: inherit; font-size: 0.85rem; }
-.field-group textarea { resize: vertical; min-height: 60px; }
+.section-title { font-size: 0.85rem; color: var(--sub); margin: 16px 0 8px; font-weight: bold; }
+textarea.req-box { width: 100%; box-sizing: border-box; padding: 12px; border: 1px solid var(--line); border-radius: 4px; font-size: 0.9rem; resize: vertical; min-height: 60px; font-family: inherit; }
 
-/* 比較表 */
-.compare-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 0.85rem; }
-.compare-table th, .compare-table td { border: 1px solid var(--line); padding: 8px; text-align: left; }
-.compare-table th { background: #faf9f6; color: var(--sub); font-weight: normal; }
-.compare-table input, .compare-table textarea { width: 100%; border: none; background: transparent; font-family: inherit; font-size: 0.85rem; box-sizing: border-box; }
-.compare-table textarea { resize: vertical; min-height: 40px; }
+/* 比較表のデザイン */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 0.85rem; }
+th, td { border: 1px solid var(--line); padding: 8px; text-align: left; vertical-align: top; }
+th { background: #faf9f6; color: var(--sub); white-space: nowrap; }
+td input, td textarea { width: 100%; box-sizing: border-box; border: 1px solid transparent; padding: 4px; font-size: 0.85rem; font-family: inherit; background: transparent; }
+td input:focus, td textarea:focus { border-color: var(--accent); background: #fff; outline: none; }
+td textarea { resize: vertical; min-height: 40px; }
+.col-action { width: 40px; text-align: center; vertical-align: middle; }
 
-/* 編集モード */
-.edit-cat { background: #faf9f6; border: 1px solid var(--line); border-radius: 6px; padding: 16px; margin-bottom: 16px; }
-.edit-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
-.edit-row input { flex-grow: 1; padding: 8px; border: 1px solid var(--line); border-radius: 4px; }
+#loader { text-align: center; color: var(--sub); padding: 40px; }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <h1>📋 開業準備 一元管理ツール</h1>
-    <p style="font-size:0.85rem; color:var(--sub); margin:0;">タスクの確認・機器の比較選定・進捗更新がここで完結します。</p>
-  </header>
-
-  <div class="controls">
-    <span id="syncStatus" style="font-size:0.85rem; color:var(--done);">● 自動同期ON</span>
-    <!-- ボタン名を「タスクを追加する」に変更 -->
-    <button class="btn" id="toggleEditBtn" onclick="toggleEditMode()">タスクを追加する</button>
+<div class="container">
+  <div class="header">
+    <h1>📝 機器・備品 選定ボード</h1>
+    <div style="display: flex; gap: 8px;">
+      <a href="index.html" class="btn">🔙 進捗管理に戻る</a>
+      <button class="btn btn-primary" id="saveBtn" onclick="saveToServer()">変更をサーバーに保存</button>
+    </div>
   </div>
-
-  <div id="loader" style="text-align:center; padding:40px; color:var(--sub);">データを読み込んでいます...</div>
   
-  <!-- 通常ビュー -->
-  <div id="viewMode"></div>
+  <p style="font-size: 0.85rem; color: var(--sub); margin-top: -16px; margin-bottom: 24px;">要件定義と比較表を作成し、どれを導入するか協議・記録するためのページです。</p>
 
-  <!-- 編集モード -->
-  <div id="editMode" style="display:none;">
-    <div style="margin-bottom: 16px; text-align:right;">
-      <!-- 保存ボタンの名称も微調整 -->
-      <button class="btn btn-primary" onclick="saveTasks()">追加を保存して戻る</button>
-    </div>
-    <div id="editPanel"></div>
-    <button class="btn" style="width:100%; padding:12px; border-style:dashed;" onclick="addCategory()">＋ 新しいカテゴリを追加</button>
-  </div>
-</div>
-
-<!-- 詳細パネル（モーダル） -->
-<div class="modal-overlay" id="taskModal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <div class="modal-title" id="mTitle">タスク詳細</div>
-      <button class="btn" onclick="closeModal()">✕ 閉じる</button>
-    </div>
-
-    <!-- 基本情報 -->
-    <div class="form-grid">
-      <div class="field-group">
-        <label>ステータス</label>
-        <select id="mStatus">
-          <option value="未対応">未対応</option>
-          <option value="発注済">発注済 / 契約済</option>
-          <option value="完了">完了</option>
-        </select>
-      </div>
-      <div class="field-group"><label>担当者</label><input type="text" id="mAssignee" placeholder="未定"></div>
-      <div class="field-group"><label>納期 / 完了予定</label><input type="date" id="mDue"></div>
-      <div class="field-group"><label>発注先 / 業者</label><input type="text" id="mVendor" placeholder="未定"></div>
-      <div class="field-group">
-        <label>承認状況</label>
-        <select id="mApproval"><option value="">-</option><option value="申請中">申請中</option><option value="承認済み">承認済み</option></select>
-      </div>
-    </div>
-
-    <!-- メモ・要件定義 -->
-    <div class="field-group" style="margin-bottom: 24px;">
-      <label>📝 フリーメモ・要件定義・参考URL</label>
-      <textarea id="mMemo" placeholder="例: 予算は〇〇万円以内、Mac対応必須、大家さんの連絡先..."></textarea>
-    </div>
-
-    <!-- 比較表エリア -->
-    <div style="margin-bottom: 24px;">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <label style="font-size:0.75rem; color:var(--sub);">📊 比較表 (機器選定などに使用)</label>
-        <button class="btn" style="padding:4px 8px; font-size:0.75rem;" onclick="addCompareRow()">＋ 候補を追加</button>
-      </div>
-      <div style="overflow-x:auto;">
-        <table class="compare-table" id="mCompareTable">
-          <thead><tr><th width="12%">候補</th><th width="22%">メーカー/製品名</th><th width="22%">費用感</th><th width="22%">メリット(◯)</th><th width="22%">懸念点(△)</th></tr></thead>
-          <tbody id="mCompareBody"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div style="text-align: right; border-top: 1px solid var(--line); padding-top: 16px;">
-      <button class="btn btn-primary" id="mSaveBtn" onclick="saveModal()">保存して閉じる</button>
-    </div>
-  </div>
+  <div id="loader">データを読み込んでいます...</div>
+  <div id="eqPanel"></div>
+  
+  <button class="btn" style="width:100%; padding:12px; border-style:dashed;" onclick="addEqItem()">＋ 新しい検討項目（機器・システム）を追加</button>
 </div>
 
 <script>
-const WEBAPP_URL = "ここにGASのWebアプリURLを貼り付けてください";
-
-let DATA = [];
-let STATE = {};
-let DETAILS = {};
-let isEditMode = false;
-let currentKey = "";
+// 【重要】ここにGASのWebアプリURL（新しいデプロイURL）を記述してください
+const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbx-jPnyjqfcHuIPj8u-LsMG1urnmQmbN4WpPjtuny61--EpIgHJv_4BPKYrwsYEOWUUjw/exec";
+let eqData = [];
 
 async function init() {
-  await fetchData();
-}
-
-async function fetchData() {
   try {
     const res = await fetch(WEBAPP_URL + "?action=get");
-    if (!res.ok) throw new Error(`サーバーエラー (${res.status})`);
-    
-    const text = await res.text();
-    let json;
-    try {
-      json = JSON.parse(text);
-    } catch(e) {
-      throw new Error("データ解析エラー");
+    const json = await res.json();
+    if (json.equipment) {
+      eqData = json.equipment;
     }
-
-    if (json.tasks) DATA = json.tasks;
-    if (json.state) STATE = json.state;
-    if (json.details) DETAILS = json.details;
-    
-    document.getElementById("syncStatus").textContent = "● 自動同期ON";
-    document.getElementById("syncStatus").style.color = "var(--done)";
     document.getElementById("loader").style.display = "none";
-    renderView();
+    renderBoard();
   } catch (e) {
-    document.getElementById("syncStatus").textContent = "○ オフライン (" + e.message + ")";
-    document.getElementById("syncStatus").style.color = "var(--danger)";
-    document.getElementById("loader").textContent = "読込失敗: " + e.message;
+    document.getElementById("loader").textContent = "通信エラーが発生しました。";
   }
 }
 
-// ---------------------------------
-// ビューモード描画
-// ---------------------------------
-function renderView() {
-  const root = document.getElementById("viewMode");
-  root.innerHTML = "";
-
-  DATA.forEach(cat => {
-    const el = document.createElement("div");
-    el.className = "cat";
-    el.innerHTML = `<div class="cat-header">${cat.title}</div>`;
-
-    cat.items.forEach(it => {
-      const key = cat.id + ":" + it.t;
-      const st = STATE[key] || { status:"未対応", assignee:"", due:"" };
-      const det = DETAILS[key] || { memo:"", options:[] };
-      
-      let badgeClass = "badge";
-      if(st.status === "発注済") badgeClass += " st-発注済";
-      if(st.status === "完了") badgeClass += " st-完了";
-      
-      const hasCompare = det.options && det.options.length > 0 ? "📊 比較あり" : "";
-
-      const row = document.createElement("div");
-      row.className = "item";
-      row.innerHTML = `
-        <div class="item-info">
-          <div class="item-title">${it.t}</div>
-          <div class="item-meta">
-            <span>担当: ${st.assignee || "未定"}</span>
-            <span>納期: ${st.due || "未定"}</span>
-            <span style="color:var(--accent);">${hasCompare}</span>
-          </div>
-        </div>
-        <div class="${badgeClass}">${st.status}</div>
-      `;
-      row.onclick = () => openModal(cat.id, it.t);
-      el.appendChild(row);
-    });
-    root.appendChild(el);
-  });
-}
-
-// ---------------------------------
-// モーダル (詳細パネル) 処理
-// ---------------------------------
-let modalOptions = []; // 比較表の一時データ
-
-function openModal(catId, taskName) {
-  currentKey = catId + ":" + taskName;
-  const st = STATE[currentKey] || { status:"未対応", assignee:"", due:"", vendor:"", approval:"" };
-  const det = DETAILS[currentKey] || { memo:"", options:[] };
-  
-  document.getElementById("mTitle").textContent = taskName;
-  document.getElementById("mStatus").value = st.status;
-  document.getElementById("mAssignee").value = st.assignee;
-  document.getElementById("mDue").value = st.due;
-  document.getElementById("mVendor").value = st.vendor;
-  document.getElementById("mApproval").value = st.approval;
-  document.getElementById("mMemo").value = det.memo;
-  
-  // 比較表の展開
-  modalOptions = JSON.parse(JSON.stringify(det.options || []));
-  renderCompareTable();
-  
-  document.getElementById("taskModal").style.display = "flex";
-}
-
-function closeModal() {
-  document.getElementById("taskModal").style.display = "none";
-}
-
-function renderCompareTable() {
-  const tbody = document.getElementById("mCompareBody");
-  tbody.innerHTML = "";
-  if(modalOptions.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#ccc; padding:16px;">「＋ 候補を追加」から比較表を作成できます</td></tr>`;
-    return;
-  }
-  
-  modalOptions.forEach((opt, idx) => {
-    tbody.innerHTML += `
-      <tr>
-        <td><input type="text" value="${opt.name}" onchange="updateOpt(${idx}, 'name', this.value)" placeholder="A案"></td>
-        <td><textarea onchange="updateOpt(${idx}, 'product', this.value)" placeholder="メーカー名">${opt.product}</textarea></td>
-        <td><textarea onchange="updateOpt(${idx}, 'cost', this.value)" placeholder="費用">${opt.cost}</textarea></td>
-        <td><textarea onchange="updateOpt(${idx}, 'merit', this.value)" placeholder="メリット">${opt.merit}</textarea></td>
-        <td><textarea onchange="updateOpt(${idx}, 'demerit', this.value)" placeholder="懸念点">${opt.demerit}</textarea></td>
-      </tr>
-    `;
-  });
-}
-
-function addCompareRow() {
-  const nextName = String.fromCharCode(65 + modalOptions.length) + "案";
-  modalOptions.push({ name: nextName, product: "", cost: "", merit: "", demerit: "" });
-  renderCompareTable();
-}
-function updateOpt(idx, field, val) { modalOptions[idx][field] = val; }
-
-async function saveModal() {
-  const btn = document.getElementById("mSaveBtn");
-  btn.textContent = "保存中...";
-  
-  // 入力値の回収
-  const stData = {
-    status: document.getElementById("mStatus").value,
-    assignee: document.getElementById("mAssignee").value,
-    due: document.getElementById("mDue").value,
-    vendor: document.getElementById("mVendor").value,
-    approval: document.getElementById("mApproval").value
-  };
-  
-  // 空の比較行は削除して保存
-  const cleanOptions = modalOptions.filter(o => o.product.trim() || o.cost.trim() || o.merit.trim() || o.demerit.trim());
-  const detData = {
-    memo: document.getElementById("mMemo").value,
-    options: cleanOptions
-  };
-
-  // ローカル更新
-  STATE[currentKey] = stData;
-  DETAILS[currentKey] = detData;
-  renderView();
-
-  // サーバーへ送信
-  try {
-    const formData = new URLSearchParams();
-    formData.append("action", "update_item");
-    formData.append("key", currentKey);
-    formData.append("state", JSON.stringify(stData));
-    formData.append("details", JSON.stringify(detData));
-    await fetch(WEBAPP_URL, { method: "POST", body: formData });
-  } catch(e) { alert("保存に失敗しました"); }
-  
-  btn.textContent = "保存して閉じる";
-  closeModal();
-}
-
-// ---------------------------------
-// リスト構成 編集モード
-// ---------------------------------
-let editData = [];
-function toggleEditMode() {
-  isEditMode = !isEditMode;
-  if(isEditMode) {
-    editData = JSON.parse(JSON.stringify(DATA));
-    document.getElementById("viewMode").style.display = "none";
-    document.getElementById("editMode").style.display = "block";
-    document.getElementById("toggleEditBtn").textContent = "追加をキャンセル"; // ボタン名の切り替え
-    renderEditPanel();
-  } else {
-    document.getElementById("viewMode").style.display = "block";
-    document.getElementById("editMode").style.display = "none";
-    document.getElementById("toggleEditBtn").textContent = "タスクを追加する"; // ボタン名の切り替え
-  }
-}
-
-function renderEditPanel() {
-  const panel = document.getElementById("editPanel");
+function renderBoard() {
+  const panel = document.getElementById("eqPanel");
   panel.innerHTML = "";
-  editData.forEach((cat, cIdx) => {
-    let html = `<div class="edit-cat">
-      <div class="edit-row"><input type="text" value="${cat.title}" onchange="editData[${cIdx}].title = this.value" style="font-weight:bold;">
-      <button class="btn btn-danger" onclick="editData.splice(${cIdx}, 1); renderEditPanel();">削除</button></div>
-    `;
-    cat.items.forEach((task, tIdx) => {
-      html += `<div class="edit-row" style="padding-left:20px;">
-        <span style="color:#ccc;">・</span><input type="text" value="${task.t}" onchange="editData[${cIdx}].items[${tIdx}].t = this.value">
-        <button class="btn" style="color:var(--danger);" onclick="editData[${cIdx}].items.splice(${tIdx}, 1); renderEditPanel();">×</button>
-      </div>`;
+  
+  eqData.forEach((eq, eIdx) => {
+    const card = document.createElement("div");
+    card.className = "eq-card";
+    
+    let stClass = eq.status === "決定" ? "st-decided" : "";
+    
+    // 比較表の行（A案、B案など）を生成
+    let rowsHtml = "";
+    eq.options.forEach((opt, oIdx) => {
+      rowsHtml += `
+        <tr>
+          <td style="font-weight:bold;">
+            <input type="text" value="${opt.name}" placeholder="A案" onchange="updateOpt(${eIdx}, ${oIdx}, 'name', this.value)">
+          </td>
+          <td>
+            <textarea placeholder="メーカー / 製品名" onchange="updateOpt(${eIdx}, ${oIdx}, 'product', this.value)">${opt.product}</textarea>
+          </td>
+          <td>
+            <textarea placeholder="初期費用・月額など" onchange="updateOpt(${eIdx}, ${oIdx}, 'cost', this.value)">${opt.cost}</textarea>
+          </td>
+          <td>
+            <textarea placeholder="優れている点" onchange="updateOpt(${eIdx}, ${oIdx}, 'merit', this.value)">${opt.merit}</textarea>
+          </td>
+          <td>
+            <textarea placeholder="懸念点・不足機能" onchange="updateOpt(${eIdx}, ${oIdx}, 'demerit', this.value)">${opt.demerit}</textarea>
+          </td>
+          <td class="col-action">
+            <button class="btn btn-small btn-danger" onclick="removeOption(${eIdx}, ${oIdx})" title="削除">×</button>
+          </td>
+        </tr>
+      `;
     });
-    html += `<button class="btn" style="margin-left:32px;" onclick="editData[${cIdx}].items.push({t:''}); renderEditPanel();">＋ タスク追加</button></div>`;
-    panel.innerHTML += html;
+
+    card.innerHTML = `
+      <div class="eq-header">
+        <input type="text" class="title" value="${eq.title}" placeholder="例: 電子カルテの選定" onchange="updateEq(${eIdx}, 'title', this.value)">
+        <select class="${stClass}" onchange="updateEq(${eIdx}, 'status', this.value)">
+          <option value="検討中" ${eq.status==='検討中'?'selected':''}>検討中</option>
+          <option value="候補絞り込み" ${eq.status==='候補絞り込み'?'selected':''}>候補絞り込み</option>
+          <option value="決定" ${eq.status==='決定'?'selected':''}>決定 (発注へ)</option>
+        </select>
+        <button class="btn btn-danger" onclick="removeEqItem(${eIdx})">削除</button>
+      </div>
+
+      <div class="section-title">■ 必須要件・メモ（URL等）</div>
+      <textarea class="req-box" placeholder="例: Mac対応必須、予算は初期100万以内、予約システムとの連携が必要..." onchange="updateEq(${eIdx}, 'req', this.value)">${eq.req || ''}</textarea>
+
+      <div class="section-title">■ 比較マトリクス</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 10%;">候補</th>
+              <th style="width: 20%;">製品名・リンク</th>
+              <th style="width: 20%;">費用感</th>
+              <th style="width: 22%;">メリット (◯)</th>
+              <th style="width: 22%;">懸念点 (△)</th>
+              <th style="width: 6%;"></th>
+            </tr>
+          </thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+      </div>
+      <button class="btn btn-small" onclick="addOption(${eIdx})">＋ 候補を追加 (B案, C案...)</button>
+    `;
+    panel.appendChild(card);
   });
 }
 
-function addCategory() {
-  editData.push({ id: "cat_" + Date.now(), title: "新カテゴリ", items: [] });
-  renderEditPanel();
+// データ操作関数
+function addEqItem() {
+  eqData.push({ title: "", status: "検討中", req: "", options: [ { name: "A案", product: "", cost: "", merit: "", demerit: "" } ] });
+  renderBoard();
+}
+function removeEqItem(eIdx) {
+  if (confirm("この検討項目を丸ごと削除しますか？")) { eqData.splice(eIdx, 1); renderBoard(); }
+}
+function updateEq(eIdx, field, val) {
+  eqData[eIdx][field] = val;
+  if (field === 'status') renderBoard(); // ステータス色反映のため再描画
+}
+function addOption(eIdx) {
+  const nextName = String.fromCharCode(65 + eqData[eIdx].options.length) + "案"; // A, B, C...と自動付与
+  eqData[eIdx].options.push({ name: nextName, product: "", cost: "", merit: "", demerit: "" });
+  renderBoard();
+}
+function removeOption(eIdx, oIdx) {
+  if (confirm("この候補を削除しますか？")) { eqData[eIdx].options.splice(oIdx, 1); renderBoard(); }
+}
+function updateOpt(eIdx, oIdx, field, val) {
+  eqData[eIdx].options[oIdx][field] = val;
 }
 
-async function saveTasks() {
-  document.getElementById("toggleEditBtn").textContent = "保存中...";
-  // 空文字除外
-  DATA = editData.filter(c => c.title.trim()).map(c => ({
-    id: c.id, title: c.title, items: c.items.filter(i => i.t.trim())
-  }));
-  
+// サーバーへ保存
+async function saveToServer() {
+  const btn = document.getElementById("saveBtn");
+  btn.textContent = "保存中...";
+  btn.disabled = true;
+
   try {
     const formData = new URLSearchParams();
-    formData.append("action", "update_tasks");
-    formData.append("tasks", JSON.stringify(DATA));
-    await fetch(WEBAPP_URL, { method: "POST", body: formData });
-  } catch(e) {}
-  
-  toggleEditMode(); // ビューに戻る
-  renderView();
+    formData.append("action", "update_equipment");
+    formData.append("equipment", JSON.stringify(eqData));
+    await fetch(WEBAPP_URL, { method: "POST", body: formData, headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
+    
+    alert("検討内容を保存しました！");
+  } catch(e) {
+    alert("保存に失敗しました。");
+  } finally {
+    btn.textContent = "変更をサーバーに保存";
+    btn.disabled = false;
+  }
 }
 
 init();
