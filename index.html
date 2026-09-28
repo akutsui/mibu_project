@@ -64,7 +64,8 @@ h1 { font-size: 1.5rem; margin: 0 0 8px; }
 
   <div class="controls">
     <span id="syncStatus" style="font-size:0.85rem; color:var(--done);">● 自動同期ON</span>
-    <button class="btn" id="toggleEditBtn" onclick="toggleEditMode()">構成を編集する</button>
+    <!-- ボタン名を「タスクを追加する」に変更 -->
+    <button class="btn" id="toggleEditBtn" onclick="toggleEditMode()">タスクを追加する</button>
   </div>
 
   <div id="loader" style="text-align:center; padding:40px; color:var(--sub);">データを読み込んでいます...</div>
@@ -75,7 +76,8 @@ h1 { font-size: 1.5rem; margin: 0 0 8px; }
   <!-- 編集モード -->
   <div id="editMode" style="display:none;">
     <div style="margin-bottom: 16px; text-align:right;">
-      <button class="btn btn-primary" onclick="saveTasks()">構成を保存して戻る</button>
+      <!-- 保存ボタンの名称も微調整 -->
+      <button class="btn btn-primary" onclick="saveTasks()">追加を保存して戻る</button>
     </div>
     <div id="editPanel"></div>
     <button class="btn" style="width:100%; padding:12px; border-style:dashed;" onclick="addCategory()">＋ 新しいカテゴリを追加</button>
@@ -136,7 +138,7 @@ h1 { font-size: 1.5rem; margin: 0 0 8px; }
 </div>
 
 <script>
-const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbx-jPnyjqfcHuIPj8u-LsMG1urnmQmbN4WpPjtuny61--EpIgHJv_4BPKYrwsYEOWUUjw/exec";
+const WEBAPP_URL = "ここにGASのWebアプリURLを貼り付けてください";
 
 let DATA = [];
 let STATE = {};
@@ -151,16 +153,28 @@ async function init() {
 async function fetchData() {
   try {
     const res = await fetch(WEBAPP_URL + "?action=get");
-    const json = await res.json();
+    if (!res.ok) throw new Error(`サーバーエラー (${res.status})`);
+    
+    const text = await res.text();
+    let json;
+    try {
+      json = JSON.parse(text);
+    } catch(e) {
+      throw new Error("データ解析エラー");
+    }
+
     if (json.tasks) DATA = json.tasks;
     if (json.state) STATE = json.state;
     if (json.details) DETAILS = json.details;
     
+    document.getElementById("syncStatus").textContent = "● 自動同期ON";
+    document.getElementById("syncStatus").style.color = "var(--done)";
     document.getElementById("loader").style.display = "none";
     renderView();
   } catch (e) {
-    document.getElementById("syncStatus").textContent = "○ オフライン";
+    document.getElementById("syncStatus").textContent = "○ オフライン (" + e.message + ")";
     document.getElementById("syncStatus").style.color = "var(--danger)";
+    document.getElementById("loader").textContent = "読込失敗: " + e.message;
   }
 }
 
@@ -313,12 +327,12 @@ function toggleEditMode() {
     editData = JSON.parse(JSON.stringify(DATA));
     document.getElementById("viewMode").style.display = "none";
     document.getElementById("editMode").style.display = "block";
-    document.getElementById("toggleEditBtn").textContent = "編集キャンセル";
+    document.getElementById("toggleEditBtn").textContent = "追加をキャンセル"; // ボタン名の切り替え
     renderEditPanel();
   } else {
     document.getElementById("viewMode").style.display = "block";
     document.getElementById("editMode").style.display = "none";
-    document.getElementById("toggleEditBtn").textContent = "構成を編集する";
+    document.getElementById("toggleEditBtn").textContent = "タスクを追加する"; // ボタン名の切り替え
   }
 }
 
