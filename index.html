@@ -31,7 +31,7 @@ h1 { font-size: 1.5rem; margin: 0 0 8px; }
 .badge.st-完了 { background: #f0f4e6; color: var(--done); border-color: var(--done); }
 .badge.st-発注済 { background: #fcf4e8; color: var(--warn); border-color: var(--warn); }
 
-/* モーダル (詳細パネル) */
+/* モーダル (詳細パネル & 説明書) */
 .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; }
 .modal-content { background: #fff; width: 95%; max-width: 800px; max-height: 90vh; overflow-y: auto; border-radius: 8px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
 .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--line); padding-bottom: 12px; }
@@ -59,7 +59,10 @@ h1 { font-size: 1.5rem; margin: 0 0 8px; }
 <div class="wrap">
   <header>
     <h1>📋 開業準備 一元管理ツール</h1>
-    <p style="font-size:0.85rem; color:var(--sub); margin:0;">タスクの確認・機器の比較選定・進捗更新がここで完結します。</p>
+    <p style="font-size:0.85rem; color:var(--sub); margin:0;">
+      タスクの確認・機器の比較選定・進捗更新がここで完結します。
+      <a href="#" onclick="openManual(); return false;" style="color:var(--accent); text-decoration:underline; font-weight:bold; margin-left:12px;">📖 使い方を見る</a>
+    </p>
   </header>
 
   <div class="controls">
@@ -89,7 +92,6 @@ h1 { font-size: 1.5rem; margin: 0 0 8px; }
       <div class="modal-title" id="mTitle">タスク詳細</div>
       <button class="btn" onclick="closeModal()">✕ 閉じる</button>
     </div>
-
     <!-- 基本情報 -->
     <div class="form-grid">
       <div class="field-group">
@@ -108,13 +110,11 @@ h1 { font-size: 1.5rem; margin: 0 0 8px; }
         <select id="mApproval"><option value="">-</option><option value="申請中">申請中</option><option value="承認済み">承認済み</option></select>
       </div>
     </div>
-
     <!-- メモ・要件定義 -->
     <div class="field-group" style="margin-bottom: 24px;">
       <label>📝 フリーメモ・要件定義・参考URL</label>
       <textarea id="mMemo" placeholder="例: 予算は〇〇万円以内、Mac対応必須、大家さんの連絡先..."></textarea>
     </div>
-
     <!-- 比較表エリア -->
     <div style="margin-bottom: 24px;">
       <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -128,9 +128,31 @@ h1 { font-size: 1.5rem; margin: 0 0 8px; }
         </table>
       </div>
     </div>
-
     <div style="text-align: right; border-top: 1px solid var(--line); padding-top: 16px;">
       <button class="btn btn-primary" id="mSaveBtn" onclick="saveModal()">保存して閉じる</button>
+    </div>
+  </div>
+</div>
+
+<!-- ★説明書（マニュアル）モーダル -->
+<div class="modal-overlay" id="manualModal">
+  <div class="modal-content" style="max-width: 600px;">
+    <div class="modal-header">
+      <div class="modal-title">📖 使い方ガイド</div>
+      <button class="btn" onclick="closeManual()">✕ 閉じる</button>
+    </div>
+    <div style="font-size: 0.9rem; line-height: 1.6; color: var(--text);">
+      <h3 style="color: var(--accent); margin-top: 0;">1. 基本的な使い方（進捗の更新）</h3>
+      <p>リストの項目をクリックすると、タスクの詳細パネルが開きます。<br>「ステータス（未対応 / 発注済 / 完了）」「担当者」「納期」などを入力・更新し、右下の<b>「保存して閉じる」</b>を押してください。</p>
+
+      <h3 style="color: var(--accent);">2. 機器や備品の比較・選定</h3>
+      <p>電子カルテなどの選定が必要なタスクは、詳細パネル下部の<b>「＋ 候補を追加」</b>を押すと比較表を作成できます。<br>A案・B案の費用やメリット・デメリットを書き込んで協議に活用し、決定したらステータスを「発注済」に変更してください。</p>
+
+      <h3 style="color: var(--accent);">3. タスクやカテゴリの追加・削除</h3>
+      <p>メイン画面右上の<b>「タスクを追加する」</b>を押すと編集モードになり、タスク名の変更、項目の追加・削除ができます。<br>整理が終わったら<b>「追加を保存して戻る」</b>を押して確定します。</p>
+
+      <h3 style="color: var(--accent);">4. データの共有について</h3>
+      <p>入力した内容は自動的にクラウドに保存され、URLを知っている関係者全員とリアルタイムに共有されます。<br>画面左上の表示が「● 自動同期ON」になっていれば正常です。</p>
     </div>
   </div>
 </div>
@@ -176,23 +198,18 @@ async function fetchData() {
 function renderView() {
   const root = document.getElementById("viewMode");
   root.innerHTML = "";
-
   DATA.forEach(cat => {
     const el = document.createElement("div");
     el.className = "cat";
     el.innerHTML = `<div class="cat-header">${cat.title}</div>`;
-
     cat.items.forEach(it => {
       const key = cat.id + ":" + it.t;
       const st = STATE[key] || { status:"未対応", assignee:"", due:"" };
       const det = DETAILS[key] || { memo:"", options:[] };
-      
       let badgeClass = "badge";
       if(st.status === "発注済") badgeClass += " st-発注済";
       if(st.status === "完了") badgeClass += " st-完了";
-      
       const hasCompare = det.options && det.options.length > 0 ? "📊 比較あり" : "";
-
       const row = document.createElement("div");
       row.className = "item";
       row.innerHTML = `
@@ -213,7 +230,11 @@ function renderView() {
   });
 }
 
-// モーダル処理
+// マニュアル（説明書）の開閉
+function openManual() { document.getElementById("manualModal").style.display = "flex"; }
+function closeManual() { document.getElementById("manualModal").style.display = "none"; }
+
+// タスクモーダル処理
 let modalOptions = []; 
 function openModal(catId, taskName) {
   currentKey = catId + ":" + taskName;
@@ -232,7 +253,6 @@ function openModal(catId, taskName) {
   renderCompareTable();
   document.getElementById("taskModal").style.display = "flex";
 }
-
 function closeModal() { document.getElementById("taskModal").style.display = "none"; }
 
 function renderCompareTable() {
@@ -254,7 +274,6 @@ function renderCompareTable() {
     `;
   });
 }
-
 function addCompareRow() {
   const nextName = String.fromCharCode(65 + modalOptions.length) + "案";
   modalOptions.push({ name: nextName, product: "", cost: "", merit: "", demerit: "" });
@@ -262,7 +281,6 @@ function addCompareRow() {
 }
 function updateOpt(idx, field, val) { modalOptions[idx][field] = val; }
 
-// ★通信を確実に通すための修正箇所
 async function saveModal() {
   const btn = document.getElementById("mSaveBtn");
   btn.textContent = "保存中...";
@@ -274,7 +292,6 @@ async function saveModal() {
     vendor: document.getElementById("mVendor").value,
     approval: document.getElementById("mApproval").value
   };
-  
   const cleanOptions = modalOptions.filter(o => o.product.trim() || o.cost.trim() || o.merit.trim() || o.demerit.trim());
   const detData = { memo: document.getElementById("mMemo").value, options: cleanOptions };
 
@@ -288,7 +305,6 @@ async function saveModal() {
     formData.append("key", currentKey);
     formData.append("state", JSON.stringify(stData));
     formData.append("details", JSON.stringify(detData));
-    // mode: "no-cors" を追加してセキュリティブロックを回避
     await fetch(WEBAPP_URL, { method: "POST", body: formData, mode: "no-cors" });
   } catch(e) { console.error("送信エラー", e); }
   
@@ -311,7 +327,6 @@ function toggleEditMode() {
     document.getElementById("toggleEditBtn").textContent = "タスクを追加する";
   }
 }
-
 function renderEditPanel() {
   const panel = document.getElementById("editPanel");
   panel.innerHTML = "";
@@ -330,12 +345,10 @@ function renderEditPanel() {
     panel.innerHTML += html;
   });
 }
-
 function addCategory() {
   editData.push({ id: "cat_" + Date.now(), title: "新カテゴリ", items: [] });
   renderEditPanel();
 }
-
 async function saveTasks() {
   document.getElementById("toggleEditBtn").textContent = "保存中...";
   DATA = editData.filter(c => c.title.trim()).map(c => ({
@@ -346,7 +359,6 @@ async function saveTasks() {
     const formData = new URLSearchParams();
     formData.append("action", "update_tasks");
     formData.append("tasks", JSON.stringify(DATA));
-    // mode: "no-cors" を追加してセキュリティブロックを回避
     await fetch(WEBAPP_URL, { method: "POST", body: formData, mode: "no-cors" });
   } catch(e) { console.error("送信エラー", e); }
   
