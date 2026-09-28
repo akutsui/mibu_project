@@ -64,7 +64,6 @@ h1 { font-size: 1.5rem; margin: 0 0 8px; }
 
   <div class="controls">
     <span id="syncStatus" style="font-size:0.85rem; color:var(--done);">● 自動同期ON</span>
-    <!-- ボタン名を「タスクを追加する」に変更 -->
     <button class="btn" id="toggleEditBtn" onclick="toggleEditMode()">タスクを追加する</button>
   </div>
 
@@ -76,7 +75,6 @@ h1 { font-size: 1.5rem; margin: 0 0 8px; }
   <!-- 編集モード -->
   <div id="editMode" style="display:none;">
     <div style="margin-bottom: 16px; text-align:right;">
-      <!-- 保存ボタンの名称も微調整 -->
       <button class="btn btn-primary" onclick="saveTasks()">追加を保存して戻る</button>
     </div>
     <div id="editPanel"></div>
@@ -138,6 +136,7 @@ h1 { font-size: 1.5rem; margin: 0 0 8px; }
 </div>
 
 <script>
+// 【超重要】ステップ2で発行した「新しいURL」をここに貼り付けてください
 const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbx-jPnyjqfcHuIPj8u-LsMG1urnmQmbN4WpPjtuny61--EpIgHJv_4BPKYrwsYEOWUUjw/exec";
 
 let DATA = [];
@@ -153,15 +152,10 @@ async function init() {
 async function fetchData() {
   try {
     const res = await fetch(WEBAPP_URL + "?action=get");
-    if (!res.ok) throw new Error(`サーバーエラー (${res.status})`);
+    if (!res.ok) throw new Error(`サーバーエラー`);
     
     const text = await res.text();
-    let json;
-    try {
-      json = JSON.parse(text);
-    } catch(e) {
-      throw new Error("データ解析エラー");
-    }
+    const json = JSON.parse(text);
 
     if (json.tasks) DATA = json.tasks;
     if (json.state) STATE = json.state;
@@ -172,15 +166,13 @@ async function fetchData() {
     document.getElementById("loader").style.display = "none";
     renderView();
   } catch (e) {
-    document.getElementById("syncStatus").textContent = "○ オフライン (" + e.message + ")";
+    document.getElementById("syncStatus").textContent = "○ オフライン";
     document.getElementById("syncStatus").style.color = "var(--danger)";
-    document.getElementById("loader").textContent = "読込失敗: " + e.message;
+    document.getElementById("loader").textContent = "データの読み込みに失敗しました。URLを確認してください。";
   }
 }
 
-// ---------------------------------
 // ビューモード描画
-// ---------------------------------
 function renderView() {
   const root = document.getElementById("viewMode");
   root.innerHTML = "";
@@ -221,11 +213,8 @@ function renderView() {
   });
 }
 
-// ---------------------------------
-// モーダル (詳細パネル) 処理
-// ---------------------------------
-let modalOptions = []; // 比較表の一時データ
-
+// モーダル処理
+let modalOptions = []; 
 function openModal(catId, taskName) {
   currentKey = catId + ":" + taskName;
   const st = STATE[currentKey] || { status:"未対応", assignee:"", due:"", vendor:"", approval:"" };
@@ -239,16 +228,12 @@ function openModal(catId, taskName) {
   document.getElementById("mApproval").value = st.approval;
   document.getElementById("mMemo").value = det.memo;
   
-  // 比較表の展開
   modalOptions = JSON.parse(JSON.stringify(det.options || []));
   renderCompareTable();
-  
   document.getElementById("taskModal").style.display = "flex";
 }
 
-function closeModal() {
-  document.getElementById("taskModal").style.display = "none";
-}
+function closeModal() { document.getElementById("taskModal").style.display = "none"; }
 
 function renderCompareTable() {
   const tbody = document.getElementById("mCompareBody");
@@ -257,7 +242,6 @@ function renderCompareTable() {
     tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#ccc; padding:16px;">「＋ 候補を追加」から比較表を作成できます</td></tr>`;
     return;
   }
-  
   modalOptions.forEach((opt, idx) => {
     tbody.innerHTML += `
       <tr>
@@ -278,11 +262,11 @@ function addCompareRow() {
 }
 function updateOpt(idx, field, val) { modalOptions[idx][field] = val; }
 
+// ★通信を確実に通すための修正箇所
 async function saveModal() {
   const btn = document.getElementById("mSaveBtn");
   btn.textContent = "保存中...";
   
-  // 入力値の回収
   const stData = {
     status: document.getElementById("mStatus").value,
     assignee: document.getElementById("mAssignee").value,
@@ -291,35 +275,27 @@ async function saveModal() {
     approval: document.getElementById("mApproval").value
   };
   
-  // 空の比較行は削除して保存
   const cleanOptions = modalOptions.filter(o => o.product.trim() || o.cost.trim() || o.merit.trim() || o.demerit.trim());
-  const detData = {
-    memo: document.getElementById("mMemo").value,
-    options: cleanOptions
-  };
+  const detData = { memo: document.getElementById("mMemo").value, options: cleanOptions };
 
-  // ローカル更新
   STATE[currentKey] = stData;
   DETAILS[currentKey] = detData;
   renderView();
 
-  // サーバーへ送信
   try {
     const formData = new URLSearchParams();
     formData.append("action", "update_item");
     formData.append("key", currentKey);
     formData.append("state", JSON.stringify(stData));
     formData.append("details", JSON.stringify(detData));
-    await fetch(WEBAPP_URL, { method: "POST", body: formData });
-  } catch(e) { alert("保存に失敗しました"); }
+    // mode: "no-cors" を追加してセキュリティブロックを回避
+    await fetch(WEBAPP_URL, { method: "POST", body: formData, mode: "no-cors" });
+  } catch(e) { console.error("送信エラー", e); }
   
   btn.textContent = "保存して閉じる";
   closeModal();
 }
 
-// ---------------------------------
-// リスト構成 編集モード
-// ---------------------------------
 let editData = [];
 function toggleEditMode() {
   isEditMode = !isEditMode;
@@ -327,12 +303,12 @@ function toggleEditMode() {
     editData = JSON.parse(JSON.stringify(DATA));
     document.getElementById("viewMode").style.display = "none";
     document.getElementById("editMode").style.display = "block";
-    document.getElementById("toggleEditBtn").textContent = "追加をキャンセル"; // ボタン名の切り替え
+    document.getElementById("toggleEditBtn").textContent = "追加をキャンセル";
     renderEditPanel();
   } else {
     document.getElementById("viewMode").style.display = "block";
     document.getElementById("editMode").style.display = "none";
-    document.getElementById("toggleEditBtn").textContent = "タスクを追加する"; // ボタン名の切り替え
+    document.getElementById("toggleEditBtn").textContent = "タスクを追加する";
   }
 }
 
@@ -362,7 +338,6 @@ function addCategory() {
 
 async function saveTasks() {
   document.getElementById("toggleEditBtn").textContent = "保存中...";
-  // 空文字除外
   DATA = editData.filter(c => c.title.trim()).map(c => ({
     id: c.id, title: c.title, items: c.items.filter(i => i.t.trim())
   }));
@@ -371,10 +346,11 @@ async function saveTasks() {
     const formData = new URLSearchParams();
     formData.append("action", "update_tasks");
     formData.append("tasks", JSON.stringify(DATA));
-    await fetch(WEBAPP_URL, { method: "POST", body: formData });
-  } catch(e) {}
+    // mode: "no-cors" を追加してセキュリティブロックを回避
+    await fetch(WEBAPP_URL, { method: "POST", body: formData, mode: "no-cors" });
+  } catch(e) { console.error("送信エラー", e); }
   
-  toggleEditMode(); // ビューに戻る
+  toggleEditMode();
   renderView();
 }
 
