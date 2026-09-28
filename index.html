@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>壬生・栃木 開業準備 進捗管理ツール</title>
+<title>新規開業準備 進捗管理ツール</title>
 <style>
 :root {
   --bg: #f8f6f0; --card: #ffffff; --text: #333333; --sub: #7a756b; --line: #e8e3d8; 
-  --accent: #a39171; --done: #6b8e23; --warn: #c27a29; --danger: #dc3545;
+  --accent: #a39171; --done: #6b8e23; --warn: #c27a29; --danger: #dc3545; --progress: #0284c7;
 }
 body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 16px; }
 .wrap { max-width: 900px; margin: 0 auto; }
@@ -30,6 +30,7 @@ h1 { font-size: 1.5rem; margin: 0 0 8px; }
 .badge { padding: 4px 8px; border-radius: 99px; font-size: 0.75rem; font-weight: bold; border: 1px solid var(--line); }
 .badge.st-完了 { background: #f0f4e6; color: var(--done); border-color: var(--done); }
 .badge.st-発注済 { background: #fcf4e8; color: var(--warn); border-color: var(--warn); }
+.badge.st-進行中 { background: #e0f2fe; color: var(--progress); border-color: var(--progress); }
 
 /* モーダル (詳細パネル & 説明書) */
 .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; }
@@ -98,6 +99,7 @@ h1 { font-size: 1.5rem; margin: 0 0 8px; }
         <label>ステータス</label>
         <select id="mStatus">
           <option value="未対応">未対応</option>
+          <option value="進行中">進行中</option>
           <option value="発注済">発注済 / 契約済</option>
           <option value="完了">完了</option>
         </select>
@@ -134,7 +136,7 @@ h1 { font-size: 1.5rem; margin: 0 0 8px; }
   </div>
 </div>
 
-<!-- ★説明書（マニュアル）モーダル -->
+<!-- 説明書（マニュアル）モーダル -->
 <div class="modal-overlay" id="manualModal">
   <div class="modal-content" style="max-width: 600px;">
     <div class="modal-header">
@@ -143,7 +145,7 @@ h1 { font-size: 1.5rem; margin: 0 0 8px; }
     </div>
     <div style="font-size: 0.9rem; line-height: 1.6; color: var(--text);">
       <h3 style="color: var(--accent); margin-top: 0;">1. 基本的な使い方（進捗の更新）</h3>
-      <p>リストの項目をクリックすると、タスクの詳細パネルが開きます。<br>「ステータス（未対応 / 発注済 / 完了）」「担当者」「納期」などを入力・更新し、右下の<b>「保存して閉じる」</b>を押してください。</p>
+      <p>リストの項目をクリックすると、タスクの詳細パネルが開きます。<br>「ステータス（未対応 / 進行中 / 発注済 / 完了）」「担当者」「納期」などを入力・更新し、右下の<b>「保存して閉じる」</b>を押してください。</p>
 
       <h3 style="color: var(--accent);">2. 機器や備品の比較・選定</h3>
       <p>電子カルテなどの選定が必要なタスクは、詳細パネル下部の<b>「＋ 候補を追加」</b>を押すと比較表を作成できます。<br>A案・B案の費用やメリット・デメリットを書き込んで協議に活用し、決定したらステータスを「発注済」に変更してください。</p>
@@ -158,7 +160,7 @@ h1 { font-size: 1.5rem; margin: 0 0 8px; }
 </div>
 
 <script>
-// 【超重要】ステップ2で発行した「新しいURL」をここに貼り付けてください
+// 【超重要】GASのWebアプリURLをここに貼り付けてください
 const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzas9VmBqkGbAHQguV9vSLf4eX6YPUa1glxp0oatwQq5zTj3t-_6MBdGJPOlkJuNjq8_g/exec";
 
 let DATA = [];
@@ -207,6 +209,7 @@ function renderView() {
       const st = STATE[key] || { status:"未対応", assignee:"", due:"" };
       const det = DETAILS[key] || { memo:"", options:[] };
       let badgeClass = "badge";
+      if(st.status === "進行中") badgeClass += " st-進行中";
       if(st.status === "発注済") badgeClass += " st-発注済";
       if(st.status === "完了") badgeClass += " st-完了";
       const hasCompare = det.options && det.options.length > 0 ? "📊 比較あり" : "";
